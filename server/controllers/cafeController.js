@@ -3,7 +3,7 @@ const { poolPromise } = require("../config/db");
 const getCafeInfo = async (req, res) => {
     try {
         const pool = await poolPromise;
-        const result = await pool.request().query('SELECT * FROM Cafe_Info');
+        const result = await pool.request().query('SELECT * FROM Cafe_Info WHERE id = 1');
 
         if (result.recordset.length === 0) {
             return res.status(404).json({ message: "Cafe Bilgilerine Ulaşılamadı..." });
