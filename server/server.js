@@ -14,8 +14,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/categories", categoriesRoutes);
-app.use("api/products", productsRoutes);
-app.use("api/cafe", cafeRoutes);
+app.use("/api/products", productsRoutes);
+app.use("/api/cafe", cafeRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

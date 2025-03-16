@@ -9,7 +9,7 @@ const getCafeInfo = async (req, res) => {
             return res.status(404).json({ message: "Cafe Bilgilerine Ulaşılamadı..." });
         }
 
-        res.json(result.recordset);
+        res.json(result.recordset[0]);
 
     } catch (error) {
         console.error("API Hatası: ", error);

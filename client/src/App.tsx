@@ -1,12 +1,17 @@
+import { ToastContainer } from 'react-toastify'
 import './App.css'
+import Spinner from './components/Spinner'
+import RouteConfig from './config/RouteConfig'
+import NavDrawer from './components/NavDrawer'
 
 function App() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold underline">
-        Hello world!
-      </h1>
+      <RouteConfig />
+      <ToastContainer autoClose={1500} style={{ fontSize: "17px" }} />
+      <Spinner />
+      <NavDrawer />
     </>
   )
 }
