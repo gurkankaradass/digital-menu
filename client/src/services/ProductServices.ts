@@ -11,6 +11,19 @@ class ProductServices {
                 .catch((error: any) => reject(error))
         })
     }
+
+    async deleteProduct(id: number): Promise<any> {
+        try {
+            const response = await axiosInstance.delete(`api/products/delete/${id}`)
+            return {
+                success: true,
+                message: response.data.message
+            }
+        } catch (error: any) {
+            console.error("Ürün Silinemedi...", error);
+            throw error.response?.data?.message || "Ürün silinemedi...";
+        }
+    }
 }
 
 export default new ProductServices

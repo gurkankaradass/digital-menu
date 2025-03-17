@@ -25,6 +25,32 @@ const getProductByCategoryName = async (req, res) => {
     }
 }
 
+const deleteProduct = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+
+        const pool = await poolPromise;
+        const checkProduct = await pool.request()
+            .input("id", sql.Int, id)
+            .query("SELECT id FROM Products WHERE id = @id");
+
+        if (checkProduct.length === 0) {
+            return res.status(404).json({ message: "Ürün Bulunamadı..." });
+        }
+
+        await pool.request()
+            .input("id", sql.Int, id)
+            .query("DELETE FROM Products WHERE id = @id");
+
+        res.status(200).json({ message: "Ürün Başarıyla Silindi" });
+    } catch (error) {
+        console.error("API Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" })
+    }
+}
+
 module.exports = {
-    getProductByCategoryName
+    getProductByCategoryName,
+    deleteProduct
 }
