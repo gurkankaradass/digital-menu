@@ -16,6 +16,7 @@ const useCategories = () => {
             const response: CategoryType[] = await CategoryServices.getAllCategories();
             if (response) {
                 dispatch(setCategories(response))
+                localStorage.setItem("category", JSON.stringify(response));
             }
         } catch (error) {
             toast.error("Kategoriler Gertirilemedi...");

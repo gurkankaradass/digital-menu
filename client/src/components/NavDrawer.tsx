@@ -21,7 +21,7 @@ const NavDrawer = () => {
     }
     return (
         <Drawer open={drawer} anchor='left' onClose={closeDrawer}>
-            <div className='h-full flex flex-col justify-between bg-violet-950 font-[arial]'>
+            <div className='h-full flex flex-col justify-between specialBg font-[arial]'>
                 <div>
                     <div className='text-center'>
                         <h1 className=' text-white p-4 font-bold text-xl'>Hoşgeldiniz!</h1>

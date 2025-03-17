@@ -1,22 +1,22 @@
-import { useDispatch, useSelector } from 'react-redux'
-import { RootState } from '../redux/store';
+import { useDispatch } from 'react-redux'
 import { setLoading, setProducts } from '../redux/appSlice';
 import { ProductType } from '../types/Types';
 import ProductServices from '../services/ProductServices';
 import { toast } from "react-toastify";
-import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const useProducts = () => {
   const dispatch = useDispatch();
-  const { products } = useSelector((state: RootState) => state.app);
+  const navigate = useNavigate();
 
-  const getAllProducts = async () => {
+
+  const getProductByCategoryName = async (categoryName: string) => {
     try {
       dispatch(setLoading(true));
-      const response: ProductType[] = await ProductServices.getAllProducts();
-      if (response) {
-        dispatch(setProducts(response));
-      }
+      const products: ProductType[] = await ProductServices.getProductByCategoryName(categoryName);
+      navigate("/" + categoryName);
+      dispatch(setProducts(products));
+      localStorage.setItem("categoryProducts", JSON.stringify(products));
     } catch (error) {
       toast.error("Ürünler Getirilemedi...");
       console.error("Ürünler Alınırken Hata:", error);
@@ -25,13 +25,7 @@ const useProducts = () => {
     }
   };
 
-  useEffect(() => {
-    if (products.length === 0) {
-      getAllProducts();
-    }
-  }, [])
-
-  return products;
+  return { getProductByCategoryName };
 }
 
 export default useProducts;

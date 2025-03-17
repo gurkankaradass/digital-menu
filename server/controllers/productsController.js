@@ -1,6 +1,6 @@
 const { sql, poolPromise } = require("../config/db");
 
-const getProductByCategory = async (req, res) => {
+const getProductByCategoryName = async (req, res) => {
     const categoryName = req.params.categoryName;
 
     if (!categoryName) {
@@ -11,7 +11,7 @@ const getProductByCategory = async (req, res) => {
         const pool = await poolPromise;
         const result = await pool.request()
             .input('categoryName', sql.NVarChar, categoryName)
-            .query('SELECT p.*, c.name AS categoryName FROM Products p JOIN Categories c ON p.category_id = c.id WHERE c.name = @categoryName');
+            .query('SELECT p.id, p.name, p.image, p.price, c.name AS categoryName FROM Products p JOIN Categories c ON p.category_id = c.id WHERE c.name = @categoryName');
 
         if (result.recordset.length === 0) {
             return res.status(404).json({ message: "Bu Kategoriye Ait Ürün Bulunamadı..." });
@@ -26,5 +26,5 @@ const getProductByCategory = async (req, res) => {
 }
 
 module.exports = {
-    getProductByCategory
+    getProductByCategoryName
 }

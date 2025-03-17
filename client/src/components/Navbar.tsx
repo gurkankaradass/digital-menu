@@ -17,7 +17,7 @@ const Navbar = () => {
     }
     return (
         <Container maxWidth="sm">
-            <div className=' flex flex-row justify-between w-full pt-5'>
+            <div className=' flex flex-row justify-between w-full pt-5 mb-5 px-[16px]'>
                 <div className='m-0 cursor-pointer' onClick={openDrawer}>
                     <ReorderIcon className='text-white' sx={{ fontSize: "35px" }} />
                 </div>
@@ -25,7 +25,7 @@ const Navbar = () => {
                     {
                         currentUrl === "/" ?
                             <img className='size-36' src={`/${cafeInfo?.logo}`} alt="Cafe Logo" /> :
-                            <p>Huzur Cafe - Menu</p>
+                            <p className='text-white text-2xl font-[arial]'>Huzur Cafe - Menu</p>
                     }
                 </div>
                 <LanguageIcon className='text-white cursor-pointer' sx={{ fontSize: "35px" }} />

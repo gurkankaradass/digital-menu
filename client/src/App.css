@@ -5,3 +5,12 @@
 body {
     background-color: #180229;
 }
+
+.css-zzzaw2-MuiContainer-root {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+}
+
+.specialBg {
+    background-color: #1f0335;
+}
