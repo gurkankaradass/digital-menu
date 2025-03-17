@@ -5,7 +5,7 @@ import RouteConfig from './config/RouteConfig'
 import NavDrawer from './components/NavDrawer'
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
-import { setCategories, setProducts } from './redux/appSlice'
+import { setCategories, setCurrentEmployee, setProducts } from './redux/appSlice'
 
 function App() {
   const dispatch = useDispatch();
@@ -21,6 +21,13 @@ function App() {
     const storedCategories = localStorage.getItem("category");
     if (storedCategories) {
       dispatch(setCategories(JSON.parse(storedCategories)));
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedEmployee = localStorage.getItem("currentEmployee");
+    if (storedEmployee) {
+      dispatch(setCurrentEmployee(JSON.parse(storedEmployee)));
     }
   }, []);
 
