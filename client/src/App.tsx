@@ -11,6 +11,13 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    const storedCafe = localStorage.getItem("cafe");
+    if (storedCafe) {
+      dispatch(setProducts(JSON.parse(storedCafe)));
+    }
+  }, []);
+
+  useEffect(() => {
     const storedProducts = localStorage.getItem("categoryProducts");
     if (storedProducts) {
       dispatch(setProducts(JSON.parse(storedProducts)));

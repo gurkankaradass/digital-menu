@@ -21,3 +21,8 @@ export const schemaEditCafe = yup.object().shape({
     map: yup.string().required("Harita URL Boş Geçilemez..."),
     instagram: yup.string().required("İnstagram İsmi Boş Geçilemez...")
 })
+
+export const schemaCategory = yup.object().shape({
+    name: yup.string().required("Kategori Adı Boş Geçilemez..."),
+    image: yup.string().required("Kategori Fotoğrafı Boş Geçilemez...")
+})

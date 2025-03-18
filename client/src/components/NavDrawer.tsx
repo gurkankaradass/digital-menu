@@ -80,6 +80,7 @@ const NavDrawer = () => {
                 const response = await CafeServices.updateCafeInfo(cafeInfo.id, payload);
                 if (response && response.success) {
                     dispatch(setCafeInfo(response.newCafeInfo))
+                    localStorage.setItem("cafe", JSON.stringify(response.newCafeInfo));
                     toast.success(response.message)
                     setOpenEdit(false)
                 } else {

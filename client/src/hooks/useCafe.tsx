@@ -16,6 +16,7 @@ const useCafe = () => {
             const response: CafeInfoType = await CafeServices.getCafeInfo();
             if (response) {
                 dispatch(setCafeInfo(response));
+                localStorage.setItem("cafe", JSON.stringify(response));
             }
         } catch (error) {
             toast.error("Kafe Bilgileri Getirilemedi...");
