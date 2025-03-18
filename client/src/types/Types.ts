@@ -1,5 +1,5 @@
 export interface CafeInfoType {
-    id: number,
+    id?: number,
     name: string,
     logo: string,
     phone: string,

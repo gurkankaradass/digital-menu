@@ -11,6 +11,21 @@ class CafeServices {
                 .catch((error: any) => reject(error))
         })
     }
+
+    async updateCafeInfo(id: number, payload: CafeInfoType): Promise<any> {
+        try {
+            const response = await axiosInstance.put(`api/cafe/update/${id}`, payload)
+            return {
+                success: true,
+                message: response.data.message,
+                newCafeInfo: response.data.updatedCafeInfo
+            }
+        } catch (error: any) {
+            console.error("Cafe Bilgileri Güncellenemedi...", error);
+            throw error.response?.data?.message || "Cafe Bilgileri Güncellenemedi..."
+        }
+    }
+
 }
 
 export default new CafeServices

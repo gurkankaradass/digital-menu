@@ -25,7 +25,7 @@ const Navbar = () => {
                     {
                         currentUrl === "/" ?
                             <img className='size-36' src={`/${cafeInfo?.logo}`} alt="Cafe Logo" /> :
-                            <p className='text-white text-2xl font-[arial]'>Huzur Cafe - Menu</p>
+                            <p className='text-white text-2xl font-[arial]'>{cafeInfo?.name} - Menu</p>
                     }
                 </div>
                 <LanguageIcon className='text-white cursor-pointer' sx={{ fontSize: "35px" }} />

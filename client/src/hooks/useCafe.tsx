@@ -29,7 +29,7 @@ const useCafe = () => {
         if (!cafeInfo) {
             getCafeInfo();
         }
-    }, [])
+    }, [cafeInfo])
 
     return cafeInfo;
 }

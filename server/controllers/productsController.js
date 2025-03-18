@@ -54,8 +54,6 @@ const updateProduct = async (req, res) => {
     const { id } = req.params;
     const { name, image, price, categoryName } = req.body;
 
-    console.log(id)
-
     if (!name || !image || !price || !categoryName) {
         return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
     }

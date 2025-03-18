@@ -1,7 +1,7 @@
 import Drawer from '@mui/material/Drawer'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
-import { setCurrentEmployee, setDrawer, setLoading } from '../redux/appSlice'
+import { setCafeInfo, setCurrentEmployee, setDrawer, setLoading } from '../redux/appSlice'
 import useCafe from '../hooks/useCafe'
 import HomeIcon from '@mui/icons-material/Home';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -16,11 +16,13 @@ import InputAdornment from '@mui/material/InputAdornment';
 import PersonIcon from '@mui/icons-material/Person';
 import { useFormik } from 'formik';
 import { Dialog, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
-import { schemaLogin } from '../schema/Schema'
-import { EmployeeType } from '../types/Types'
+import { schemaEditCafe, schemaLogin } from '../schema/Schema'
+import { CafeInfoType, EmployeeType } from '../types/Types'
 import { toast } from 'react-toastify'
 import EmployeeServices from '../services/EmployeeServices'
 import { useNavigate } from 'react-router-dom'
+import EditIcon from '@mui/icons-material/Edit';
+import CafeServices from '../services/CafeServices'
 
 interface CheckEmployeeType {
     employee: EmployeeType;
@@ -35,6 +37,8 @@ const NavDrawer = () => {
     const navigate = useNavigate();
 
     const [open, setOpen] = useState(false);
+    const [openEdit, setOpenEdit] = useState(false);
+
 
     const submit = async (values: any, action: any) => {
         try {
@@ -59,7 +63,37 @@ const NavDrawer = () => {
         }
     }
 
-    const { values, handleSubmit, handleChange, errors, resetForm } = useFormik({
+    const submit1 = async (values: any, action: any) => {
+        try {
+            dispatch(setLoading(true));
+            const payload: CafeInfoType = {
+                id: cafeInfo?.id,
+                name: values.name,
+                logo: values.logo,
+                phone: values.phone,
+                location: values.location,
+                address: values.address,
+                map: values.map,
+                instagram: values.instagram,
+            };
+            if (cafeInfo?.id) {
+                const response = await CafeServices.updateCafeInfo(cafeInfo.id, payload);
+                if (response && response.success) {
+                    dispatch(setCafeInfo(response.newCafeInfo))
+                    toast.success(response.message)
+                    setOpenEdit(false)
+                } else {
+                    toast.error("Beklenmeyen bir hata oluştu.");
+                }
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Bir hata oluştu.");
+        } finally {
+            dispatch(setLoading(false));
+        }
+    };
+
+    const formik = useFormik({
         initialValues: {
             username: '',
             password: '',
@@ -67,9 +101,28 @@ const NavDrawer = () => {
         onSubmit: submit,
         validationSchema: schemaLogin
     });
+    const { values: values, handleSubmit: handleSubmit, handleChange: handleChange, errors: errors, resetForm: resetForm } = formik;
+
+
+    const formik1 = useFormik({
+        initialValues: {
+            name: cafeInfo?.name || '',
+            logo: cafeInfo?.logo || '',
+            phone: cafeInfo?.phone || '',
+            location: cafeInfo?.location || '',
+            address: cafeInfo?.address || '',
+            map: cafeInfo?.map || '',
+            instagram: cafeInfo?.instagram || ''
+        },
+        onSubmit: submit1,
+        validationSchema: schemaEditCafe,
+        enableReinitialize: true
+    });
+    const { values: values1, handleSubmit: handleSubmit1, handleChange: handleChange1, errors: errors1, resetForm: resetForm1 } = formik1;
 
     const reset = () => {
         resetForm();
+        resetForm1();
     }
 
     const logout = async () => {
@@ -98,8 +151,6 @@ const NavDrawer = () => {
                     <div className='text-center'>
                         <div className='flex flex-row text-white justify-evenly items-center'>
                             <h1 className='p-4 font-bold text-xl'>Hoşgeldiniz!</h1>
-
-
                             {
                                 currentEmployee ?
                                     <button onClick={logout}>
@@ -109,7 +160,6 @@ const NavDrawer = () => {
                                         <LoginIcon className='cursor-pointer' />
                                     </button>
                             }
-
                             <Dialog open={open} onClose={() => setOpen(false)}>
                                 <form className='w-64 font-[arial]' onSubmit={handleSubmit}>
                                     <DialogTitle sx={{ justifyContent: "center" }}>
@@ -163,7 +213,6 @@ const NavDrawer = () => {
                                     </div>
                                 </form>
                             </Dialog>
-
                         </div>
                         <hr className='border-black' />
                     </div >
@@ -190,16 +239,110 @@ const NavDrawer = () => {
                         <div>
                             <hr className='border-black' />
                             <div className='text-white p-4'>
-                                <h1 className='text-white font-bold text-md'>Adres Bilgileri</h1>
+                                <div className=' flex justify-between'>
+                                    <h1 className='text-white font-bold text-md'>İşletme Bilgileri</h1>
+                                    {
+                                        currentEmployee && currentEmployee.role === "admin" ?
+                                            <button onClick={() => setOpenEdit(true)}>
+                                                <EditIcon className='cursor-pointer' />
+                                            </button> : <div></div>
+                                    }
+                                    <Dialog
+                                        open={openEdit}
+                                        onClose={() => setOpenEdit(false)}
+                                    >
+                                        <DialogContent
+                                        >
+                                            <div>
+                                                <form className='w-64 text-center font-[arial]' onSubmit={handleSubmit1}>
+                                                    <h2 className='font-bold text-xl mb-2'>CAFE BİLGİLERİ</h2>
+                                                    <div className='adminInput-div'>
+                                                        <div className='left'>
+                                                            <TextField
+                                                                id="name"
+                                                                label="Cafe Adı"
+                                                                value={values1.name}
+                                                                onChange={handleChange1}
+                                                                sx={{ marginBottom: "10px", width: "100%" }}
+                                                                variant="standard"
+                                                                helperText={errors1.name && <span className='text-red-800'>{errors1.name}</span>}
+                                                            />
+                                                            <TextField
+                                                                id="logo"
+                                                                label="Logo URL"
+                                                                value={values1.logo}
+                                                                onChange={handleChange1}
+                                                                sx={{ marginBottom: "10px", width: "100%" }}
+                                                                variant="standard"
+                                                                helperText={errors1.logo && <span className='text-red-800'>{errors1.logo}</span>}
+                                                            />
+                                                            <TextField
+                                                                id="phone"
+                                                                label="Telefon"
+                                                                value={values1.phone}
+                                                                onChange={handleChange1}
+                                                                sx={{ marginBottom: "10px", width: "100%" }}
+                                                                variant="standard"
+                                                                helperText={errors1.phone && <span className='text-red-800'>{errors1.phone}</span>}
+                                                            />
+                                                            <TextField
+                                                                id="location"
+                                                                label="Konum"
+                                                                value={values1.location}
+                                                                onChange={handleChange1}
+                                                                sx={{ marginBottom: "10px", width: "100%" }}
+                                                                variant="standard"
+                                                                helperText={errors1.location && <span className='text-red-800'>{errors1.location}</span>}
+                                                            />
+                                                            <TextField
+                                                                id="address"
+                                                                label="Adres"
+                                                                value={values1.address}
+                                                                onChange={handleChange1}
+                                                                sx={{ marginBottom: "10px", width: "100%" }}
+                                                                variant="standard"
+                                                                helperText={errors1.address && <span className='text-red-800'>{errors1.address}</span>}
+                                                            />
+                                                            <TextField
+                                                                id="map"
+                                                                label="Harita URL"
+                                                                value={values1.map}
+                                                                onChange={handleChange1}
+                                                                sx={{ marginBottom: "10px", width: "100%" }}
+                                                                variant="standard"
+                                                                helperText={errors1.map && <span className='text-red-800'>{errors1.map}</span>}
+                                                            />
+                                                            <TextField
+                                                                id="instagram"
+                                                                label="Instagram"
+                                                                value={values1.instagram}
+                                                                onChange={handleChange1}
+                                                                sx={{ marginBottom: "10px", width: "100%" }}
+                                                                variant="standard"
+                                                                helperText={errors1.instagram && <span className='text-red-800'>{errors1.instagram}</span>}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className='justify-center my-2 text-white'>
+                                                        <button type='submit' className='font-bold bg-slate-950  rounded-2xl p-1 px-3 mr-3 mb-2'>Cafe Bilgilerini Güncelle</button>
+                                                        <button type='reset' className='font-bold bg-slate-950  rounded-2xl p-1 px-3' onClick={reset}>Temizle</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
                                 <p className='flex items-center mt-3'><HomeIcon className='mr-1' />{cafeInfo?.location}</p>
                                 <p className='flex items-center mt-3 max-w-48'><LocationOnIcon className='mr-1' />{cafeInfo?.address}</p>
-                            </div>
-                        </div>
-                        <div>
-                            <div className='text-white p-4'>
-                                <h1 className='text-white font-bold text-md'>İletişim Bilgileri</h1>
-                                <p className='flex items-center mt-3'><LocalPhoneIcon className='mr-1' />{cafeInfo?.phone}</p>
-                                <p className='flex items-center mt-3'><InstagramIcon className='mr-1' />{cafeInfo?.instagram}</p>
+                                <p className='flex items-center mt-3'>
+                                    <LocalPhoneIcon className='mr-1' />
+                                    <a href={`tel:${cafeInfo?.phone}`}>{cafeInfo?.phone}</a>
+                                </p>
+                                <p className='flex items-center mt-3'>
+                                    <InstagramIcon className='mr-1' />
+                                    <a href={`https://www.instagram.com/${cafeInfo?.instagram}`} target="_blank" rel="noopener noreferrer">
+                                        {cafeInfo?.instagram}
+                                    </a></p>
                             </div>
                         </div>
                     </div>

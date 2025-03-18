@@ -7,7 +7,17 @@ export const schemaLogin = yup.object().shape({
 
 export const schemaUpdateProduct = yup.object().shape({
     name: yup.string().required("Ürün Adı Boş Geçilemez..."),
-    image: yup.string().required("FotoğrafBoş Geçilemez..."),
+    image: yup.string().required("Fotoğraf Boş Geçilemez..."),
     price: yup.string().required("Fiyat Boş Geçilemez..."),
     categoryName: yup.string().required("Kategori İsmi Boş Geçilemez...")
+})
+
+export const schemaEditCafe = yup.object().shape({
+    name: yup.string().required("Cafe Adı Boş Geçilemez..."),
+    logo: yup.string().required("Logo Boş Geçilemez..."),
+    phone: yup.string().required("Telefon Boş Geçilemez..."),
+    location: yup.string().required("Mekan İsmi Boş Geçilemez..."),
+    address: yup.string().required("Adres Boş Geçilemez..."),
+    map: yup.string().required("Harita URL Boş Geçilemez..."),
+    instagram: yup.string().required("İnstagram İsmi Boş Geçilemez...")
 })
