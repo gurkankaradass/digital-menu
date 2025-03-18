@@ -12,7 +12,7 @@ const CategoryCard = (props: PropsType) => {
     const { getProductByCategoryName } = useProducts();
     return (
         <div className='px-[16px]'>
-            <Card onClick={() => { getProductByCategoryName(name) }} className="flex flex-col justify-between max-w-xl h-36 sm:h-56 mt-5 cursor-pointer relative">
+            <Card onClick={() => { getProductByCategoryName(name) }} className="flex flex-col justify-between max-w-xl h-36 sm:h-56 mt-5 cursor-pointer relative border">
                 <div>
                     <img src={image} alt={name} className="object-contain w-full h-full" />
 

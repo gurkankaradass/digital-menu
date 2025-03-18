@@ -50,7 +50,50 @@ const deleteProduct = async (req, res) => {
     }
 }
 
+const updateProduct = async (req, res) => {
+    const { id } = req.params;
+    const { name, image, price, categoryName } = req.body;
+
+    console.log(id)
+
+    if (!name || !image || !price || !categoryName) {
+        return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
+    }
+
+    try {
+        const pool = await poolPromise;
+
+        let formattedPrice = price;
+
+        if (formattedPrice % 1 === 0) {
+            formattedPrice = `${formattedPrice}.00`;
+        }
+
+        formattedPrice = parseFloat(formattedPrice).toFixed(2);
+
+        await pool.request()
+            .input("id", sql.Int, id)
+            .input("name", sql.NVarChar, name)
+            .input("image", sql.NVarChar, image)
+            .input("price", sql.Decimal(10, 2), formattedPrice)
+            .input("categoryName", sql.NVarChar, categoryName)
+            .query(`UPDATE Products 
+            SET 
+                name = @name,
+                image = @image,
+                price = @price,
+                category_id = (SELECT id FROM Categories WHERE name = @categoryName)
+            WHERE id = @id`)
+
+        res.status(201).json({ message: "Ürün Güncellendi..." });
+    } catch (error) {
+        console.error("Ürün Güncelleme Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" })
+    }
+}
+
 module.exports = {
     getProductByCategoryName,
-    deleteProduct
+    deleteProduct,
+    updateProduct
 }

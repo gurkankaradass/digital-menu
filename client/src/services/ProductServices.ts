@@ -24,6 +24,19 @@ class ProductServices {
             throw error.response?.data?.message || "Ürün silinemedi...";
         }
     }
+
+    async updateProduct(id: number, payload: ProductType): Promise<any> {
+        try {
+            const response = await axiosInstance.put(`api/products/update/${id}`, payload)
+            return {
+                success: true,
+                message: response.data.message
+            }
+        } catch (error: any) {
+            console.error("Ürün Güncellenemedi...", error);
+            throw error.response?.data?.message || "Ürün Güncellenemedi..."
+        }
+    }
 }
 
 export default new ProductServices
