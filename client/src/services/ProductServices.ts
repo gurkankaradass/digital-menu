@@ -12,6 +12,24 @@ class ProductServices {
         })
     }
 
+    async addNewProduct(payload: ProductType): Promise<any> {
+        try {
+            const response: AxiosResponse<any> = await axiosInstance.post("api/products/addNewProduct", payload);
+            if (response.status === 200) {
+                return {
+                    success: true,
+                    message: response.data.message || "Yeni Ürün Oluşturuldu...",
+                    newProducts: response.data.newProducts
+                }
+            }
+            throw new Error("Beklenmedik Bir Durum Oluştu...");
+        } catch (error: any) {
+            console.error("Backend error: ", error);
+            const errorMessage = error.response?.data?.message || "Ürün kaydedilemedi. Lütfen tekrar deneyin.";
+            throw new Error(errorMessage);
+        }
+    }
+
     async deleteProduct(id: number): Promise<any> {
         try {
             const response = await axiosInstance.delete(`api/products/delete/${id}`)

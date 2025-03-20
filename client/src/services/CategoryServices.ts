@@ -26,7 +26,7 @@ class CategoryServices {
             throw new Error("Beklenmedik Bir Durum Oluştu...");
         } catch (error: any) {
             console.error("Backend error: ", error);
-            const errorMessage = error.response?.data?.message || "Etkinlik kaydedilemedi. Lütfen tekrar deneyin.";
+            const errorMessage = error.response?.data?.message || "Kategori kaydedilemedi. Lütfen tekrar deneyin.";
             throw new Error(errorMessage);
         }
     }

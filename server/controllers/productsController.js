@@ -22,6 +22,66 @@ const getProductByCategoryName = async (req, res) => {
     }
 }
 
+const addNewProduct = async (req, res) => {
+    const { name, categoryName, image, price } = req.body
+
+    console.log(name, categoryName, image, price)
+
+    if (!name || !categoryName || !image || !price) {
+        return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
+    }
+
+    try {
+        const pool = await poolPromise;
+
+        let formattedPrice = price;
+
+        if (formattedPrice % 1 === 0) {
+            formattedPrice = `${formattedPrice}.00`;
+        }
+
+        formattedPrice = parseFloat(formattedPrice).toFixed(2);
+
+        const checkProduct = await pool.request()
+            .input("name", sql.NVarChar, name)
+            .query("SELECT id FROM Products WHERE name = @name");
+
+        if (checkProduct.recordset.length > 0) {
+            return res.status(400).json({ message: "Ürün Zaten Mevcut" });;
+        }
+
+        const categoryResult = await pool.request()
+            .input("categoryName", sql.NVarChar, categoryName)
+            .query("SELECT id FROM Categories WHERE name = @categoryName");
+
+        if (categoryResult.recordset.length === 0) {
+            return res.status(400).json({ message: "Kategori bulunamadı" });
+        }
+
+        const categoryId = categoryResult.recordset[0].id;
+
+        await pool.request()
+            .input("name", sql.NVarChar, name)
+            .input("categoryId", sql.Int, categoryId)
+            .input("image", sql.NVarChar, image)
+            .input("price", sql.Decimal(10, 2), formattedPrice)
+            .query(`INSERT INTO Products (name, category_id, image, price) VALUES (@name, @categoryId, @image, @price)`)
+
+        const newProducts = await pool.request()
+            .input("categoryId", sql.Int, categoryId)
+            .query("SELECT * FROM Products WHERE category_id = @categoryId");
+
+        res.status(200).json({
+            message: "Yeni Ürün Oluşturuldu...",
+            newProducts: newProducts.recordset
+        })
+
+    } catch (error) {
+        console.error("Ürün Ekleme Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" })
+    }
+}
+
 const deleteProduct = async (req, res) => {
     const { id } = req.params;
 
@@ -89,6 +149,7 @@ const updateProduct = async (req, res) => {
 
 module.exports = {
     getProductByCategoryName,
+    addNewProduct,
     deleteProduct,
     updateProduct
 }

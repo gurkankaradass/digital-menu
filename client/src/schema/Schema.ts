@@ -5,7 +5,7 @@ export const schemaLogin = yup.object().shape({
     password: yup.string().required("Şifre Boş Geçilemez...")
 })
 
-export const schemaUpdateProduct = yup.object().shape({
+export const schemaProduct = yup.object().shape({
     name: yup.string().required("Ürün Adı Boş Geçilemez..."),
     image: yup.string().required("Fotoğraf Boş Geçilemez..."),
     price: yup.string().required("Fiyat Boş Geçilemez..."),

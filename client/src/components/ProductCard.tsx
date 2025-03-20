@@ -11,7 +11,7 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, T
 import useProducts from "../hooks/useProducts";
 import { useFormik } from "formik";
 import { FormControl, FormHelperText, InputLabel, MenuItem, Select } from '@mui/material'
-import { schemaUpdateProduct } from "../schema/Schema";
+import { schemaProduct } from "../schema/Schema";
 
 interface PropsType {
     product: ProductType
@@ -78,10 +78,10 @@ const ProductCard = (props: PropsType) => {
             name: name || "",
             image: image || "",
             price: price || "",
-            categoryName: categoryName || ""
+            categoryName: categoryNameFromUrl || ""
         },
         onSubmit: submit,
-        validationSchema: schemaUpdateProduct,
+        validationSchema: schemaProduct,
         enableReinitialize: true
     });
 

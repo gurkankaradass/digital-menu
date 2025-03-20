@@ -74,7 +74,7 @@ const HomePage = () => {
                 }
                 {
                     currentEmployee && currentEmployee.role === "admin" ?
-                        <div onClick={() => setOpen(true)} className="h-10 bg-white mx-[16px] mt-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
+                        <div onClick={() => setOpen(true)} className="h-10 bg-white mx-[16px] my-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
                             <p>Kategori Ekle</p>
                         </div> : <div></div>
                 }
