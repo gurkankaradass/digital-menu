@@ -129,7 +129,7 @@ const ProductCard = (props: PropsType) => {
                             <DialogContent
                             >
                                 <div>
-                                    <form className='w-64 text-center font-[arial]' onSubmit={handleSubmit}>
+                                    <form className='text-center font-[arial]' onSubmit={handleSubmit}>
                                         <h2 className='font-bold text-xl mb-2'>ÜRÜN BİLGİLERİ</h2>
                                         <div className='adminInput-div'>
                                             <div className='left'>

@@ -13,11 +13,8 @@ const getProductByCategoryName = async (req, res) => {
             .input('categoryName', sql.NVarChar, categoryName)
             .query('SELECT p.id, p.name, p.image, p.price, c.name AS categoryName FROM Products p JOIN Categories c ON p.category_id = c.id WHERE c.name = @categoryName');
 
-        if (result.recordset.length === 0) {
-            return res.status(404).json({ message: "Bu Kategoriye Ait Ürün Bulunamadı..." });
-        }
-
         res.json(result.recordset);
+
 
     } catch (error) {
         console.error("API Hatası: ", error);

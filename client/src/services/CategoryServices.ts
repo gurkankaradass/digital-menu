@@ -30,6 +30,34 @@ class CategoryServices {
             throw new Error(errorMessage);
         }
     }
+
+    async deleteCategory(id: number): Promise<any> {
+        try {
+            const response = await axiosInstance.delete(`api/categories/delete/${id}`)
+            return {
+                success: true,
+                message: response.data.message,
+                newCategories: response.data.newCategories
+            }
+        } catch (error: any) {
+            console.error("Kategori Silinemedi: ", error);
+            throw error.response?.data?.message || "Kategori Silinemedi...";
+        }
+    }
+
+    async updateCategory(id: number, payload: CategoryType): Promise<any> {
+        try {
+            const response = await axiosInstance.put(`api/categories/update/${id}`, payload)
+            return {
+                success: true,
+                message: response.data.message,
+                newCategories: response.data.newCategories
+            }
+        } catch (error: any) {
+            console.error("Kategori Güncellenemedi: ", error);
+            throw error.response?.data?.message || "Kategori Güncellenemedi...";
+        }
+    }
 }
 
 export default new CategoryServices

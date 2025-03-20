@@ -53,7 +53,75 @@ const addNewCategory = async (req, res) => {
 
 }
 
+const deleteCategory = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const pool = await poolPromise;
+        const chechCategory = await pool.request()
+            .input("id", sql.Int, id)
+            .query("SELECT id FROM Categories WHERE id = @id");
+
+        if (!chechCategory) {
+            return res.status(404).json({ message: "Kategori Bulunamadı..." });
+        }
+
+        await pool.request()
+            .input("id", sql.Int, id)
+            .query("DELETE FROM Categories WHERE id = @id");
+
+        const newCategories = await pool.request()
+            .query("SELECT * FROM Categories");
+
+        res.status(200).json({
+            message: "Kategori Başarıyla Silindi...",
+            newCategories: newCategories.recordset
+        })
+
+    } catch (error) {
+        console.error("API Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" });
+    }
+}
+
+const updateCategory = async (req, res) => {
+    const { id } = req.params;
+    const { name, image } = req.body;
+
+    if (!name || !image) {
+        return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." });
+    }
+
+    try {
+        const pool = await poolPromise;
+
+        await pool.request()
+            .input("id", sql.Int, id)
+            .input("name", sql.NVarChar, name)
+            .input("image", sql.NVarChar, image)
+            .query(`UPDATE Categories
+                SET
+                    name = @name,
+                    image = @image
+                WHERE id = @id`)
+
+        const newCategories = await pool.request()
+            .query("SELECT * FROM Categories");
+
+        res.status(200).json({
+            message: "Kategori Güncellendi...",
+            newCategories: newCategories.recordset
+        })
+
+    } catch (error) {
+        console.error("Kategori Güncelleme Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" });
+    }
+}
+
 module.exports = {
     getAllCategories,
-    addNewCategory
+    addNewCategory,
+    deleteCategory,
+    updateCategory
 }
