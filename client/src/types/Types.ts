@@ -10,7 +10,7 @@ export interface CafeInfoType {
 }
 
 export interface EmployeeType {
-    id: number,
+    id?: number,
     username: string,
     password: string,
     role: string

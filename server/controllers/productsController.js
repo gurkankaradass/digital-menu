@@ -25,8 +25,6 @@ const getProductByCategoryName = async (req, res) => {
 const addNewProduct = async (req, res) => {
     const { name, categoryName, image, price } = req.body
 
-    console.log(name, categoryName, image, price)
-
     if (!name || !categoryName || !image || !price) {
         return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
     }

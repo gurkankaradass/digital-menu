@@ -5,6 +5,12 @@ export const schemaLogin = yup.object().shape({
     password: yup.string().required("Şifre Boş Geçilemez...")
 })
 
+export const schemaAddNewEmployee = yup.object().shape({
+    username: yup.string().required("Kullanıcı Adı Boş Geçilemez..."),
+    password: yup.string().required("Şifre Boş Geçilemez..."),
+    role: yup.string().required("Personel Rolü Boş Geçilemez...")
+})
+
 export const schemaProduct = yup.object().shape({
     name: yup.string().required("Ürün Adı Boş Geçilemez..."),
     image: yup.string().required("Fotoğraf Boş Geçilemez..."),

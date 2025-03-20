@@ -15,14 +15,15 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import PersonIcon from '@mui/icons-material/Person';
 import { useFormik } from 'formik';
-import { Dialog, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
-import { schemaEditCafe, schemaLogin } from '../schema/Schema'
+import { Dialog, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormHelperText, FormLabel, Radio, RadioGroup } from "@mui/material";
+import { schemaAddNewEmployee, schemaEditCafe, schemaLogin } from '../schema/Schema'
 import { CafeInfoType, EmployeeType } from '../types/Types'
 import { toast } from 'react-toastify'
 import EmployeeServices from '../services/EmployeeServices'
 import { useNavigate } from 'react-router-dom'
 import EditIcon from '@mui/icons-material/Edit';
 import CafeServices from '../services/CafeServices'
+import { FormControl } from '@mui/material'
 
 interface CheckEmployeeType {
     employee: EmployeeType;
@@ -37,6 +38,7 @@ const NavDrawer = () => {
     const navigate = useNavigate();
 
     const [open, setOpen] = useState(false);
+    const [open1, setOpen1] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
 
 
@@ -94,6 +96,30 @@ const NavDrawer = () => {
         }
     };
 
+    const submit2 = async (values2: any, action: any) => {
+        try {
+            dispatch(setLoading(true));
+            const payload: EmployeeType = {
+                username: values2.username,
+                password: values2.password,
+                role: values2.role
+            };
+            const response = await EmployeeServices.addNewEmployee(payload);
+            if (response && response.success) {
+                toast.success(response.message)
+                resetForm2();
+                setOpen1(false)
+                dispatch(setDrawer(false))
+            } else {
+                toast.error("Beklenmeyen bir hata oluştu.");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Bir hata oluştu.");
+        } finally {
+            dispatch(setLoading(false));
+        }
+    };
+
     const formik = useFormik({
         initialValues: {
             username: '',
@@ -121,9 +147,22 @@ const NavDrawer = () => {
     });
     const { values: values1, handleSubmit: handleSubmit1, handleChange: handleChange1, errors: errors1, resetForm: resetForm1 } = formik1;
 
+    const formik2 = useFormik({
+        initialValues: {
+            username: '',
+            password: '',
+            role: ''
+        },
+        onSubmit: submit2,
+        validationSchema: schemaAddNewEmployee,
+        enableReinitialize: true
+    });
+    const { values: values2, handleSubmit: handleSubmit2, handleChange: handleChange2, errors: errors2, resetForm: resetForm2 } = formik2;
+
     const reset = () => {
         resetForm();
         resetForm1();
+        resetForm2();
     }
 
     const logout = async () => {
@@ -344,6 +383,81 @@ const NavDrawer = () => {
                                     <a href={`https://www.instagram.com/${cafeInfo?.instagram}`} target="_blank" rel="noopener noreferrer">
                                         {cafeInfo?.instagram}
                                     </a></p>
+                            </div>
+                            <div>
+                                {
+                                    currentEmployee && currentEmployee.role === "admin" ?
+                                        <div onClick={() => setOpen1(true)} className="h-10 bg-white mx-[16px] my-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
+                                            <p>Personel Ekle</p>
+                                        </div> : <div></div>
+                                }
+                                <Dialog open={open1} onClose={() => setOpen1(false)}>
+                                    <form className='w-64 font-[arial]' onSubmit={handleSubmit2}>
+                                        <DialogTitle sx={{ justifyContent: "center" }}>
+                                            <h3 className='text-center font-bold'>PERSONEL EKLE</h3></DialogTitle>
+                                        <DialogContent>
+                                            <DialogContentText>
+                                                <div>
+                                                    <TextField
+                                                        id="username"
+                                                        label="Kullanıcı Adı"
+                                                        value={values2.username}
+                                                        onChange={handleChange2}
+                                                        sx={{ marginBottom: "10px", width: "100%" }}
+                                                        slotProps={{
+                                                            input: {
+                                                                startAdornment: (
+                                                                    <InputAdornment position="start">
+                                                                        <PersonIcon />
+                                                                    </InputAdornment>
+                                                                ),
+                                                            },
+                                                        }}
+                                                        variant="standard"
+                                                        helperText={errors2.username && <span className='text-red-800'>{errors2.username}</span>}
+                                                    />
+                                                    <TextField
+                                                        id="password"
+                                                        label="Şifre"
+                                                        type='password'
+                                                        value={values2.password}
+                                                        onChange={handleChange2}
+                                                        sx={{ marginBottom: "10px", width: "100%" }}
+                                                        slotProps={{
+                                                            input: {
+                                                                startAdornment: (
+                                                                    <InputAdornment position="start">
+                                                                        <FaLock />
+                                                                    </InputAdornment>
+                                                                ),
+                                                            },
+                                                        }}
+                                                        variant="standard"
+                                                        helperText={errors2.password && <span className='text-red-800'>{errors2.password}</span>}
+                                                    />
+                                                    <FormControl>
+                                                        <FormLabel sx={{ fontSize: "12px" }} id="demo-radio-buttons-group-label">Personel Rolü</FormLabel>
+                                                        <RadioGroup
+                                                            row
+                                                            aria-labelledby="demo-radio-buttons-group-label"
+                                                            name="role"
+                                                            value={values2.role}
+                                                            onChange={handleChange2}
+                                                        >
+                                                            <FormControlLabel value="admin" control={<Radio size='small' />} label="Yönetici" />
+                                                            <FormControlLabel value="waiter" control={<Radio size='small' />} label="Garson" />
+                                                        </RadioGroup>
+                                                        {errors2.role && <FormHelperText><span style={{ fontSize: "11px" }} className='text-red-800'>{errors2.role}</span></FormHelperText>}
+                                                    </FormControl>
+                                                </div>
+                                            </DialogContentText>
+                                        </DialogContent>
+                                        <div className='flex flex-row justify-center mb-2 text-white'>
+                                            <button type='submit' className='font-bold bg-slate-950  rounded-2xl p-1 px-3 mr-3'>Personel Ekle</button>
+                                            <button type='reset' onClick={reset} className='font-bold bg-slate-950  rounded-2xl p-1 px-3'>Temizle</button>
+                                        </div>
+                                    </form>
+                                </Dialog>
                             </div>
                         </div>
                     </div>

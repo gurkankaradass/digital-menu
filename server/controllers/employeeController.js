@@ -35,6 +35,39 @@ const login = async (req, res) => {
     }
 };
 
+const addNewEmployee = async (req, res) => {
+    const { username, password, role } = req.body
+
+    if (!username || !password || !role) {
+        return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
+    }
+
+    try {
+        const pool = await poolPromise;
+
+        const checkEmployee = await pool.request()
+            .input("username", sql.NVarChar, username)
+            .query("SELECT id FROM Employees WHERE username = @username");
+
+        if (checkEmployee.recordset.length > 0) {
+            return res.status(400).json({ message: "Personel Zaten Mevcut" });;
+        }
+
+        await pool.request()
+            .input("username", sql.NVarChar, username)
+            .input("password", sql.NVarChar, password)
+            .input("role", sql.NVarChar, role)
+            .query(`INSERT INTO Employees (username, password, role) VALUES (@username, @password, @role)`)
+
+        res.status(200).json({ message: "Yeni Personel Oluşturuldu..." })
+
+    } catch (error) {
+        console.error("Personel Ekleme Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" })
+    }
+}
+
 module.exports = {
-    login
+    login,
+    addNewEmployee
 }
