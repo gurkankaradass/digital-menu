@@ -1,5 +1,21 @@
 const { sql, poolPromise } = require("../config/db")
 
+const getAllEmployees = async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query("SELECT id, username, role FROM Employees");
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: "Personel Bulunamadı..." });
+        }
+
+        res.json(result.recordset);
+    } catch (error) {
+        console.error("API Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" });
+    }
+};
+
 const login = async (req, res) => {
     const { username, password } = req.body;
 
@@ -59,7 +75,13 @@ const addNewEmployee = async (req, res) => {
             .input("role", sql.NVarChar, role)
             .query(`INSERT INTO Employees (username, password, role) VALUES (@username, @password, @role)`)
 
-        res.status(200).json({ message: "Yeni Personel Oluşturuldu..." })
+        const newEmployees = await pool.request()
+            .query("SELECT * FROM Employees");
+
+        res.status(200).json({
+            message: "Personel Eklendi...",
+            newEmployees: newEmployees.recordset
+        })
 
     } catch (error) {
         console.error("Personel Ekleme Hatası: ", error);
@@ -67,7 +89,40 @@ const addNewEmployee = async (req, res) => {
     }
 }
 
+const deleteEmployee = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+
+        const pool = await poolPromise;
+        const checkEmployee = await pool.request()
+            .input("id", sql.Int, id)
+            .query("SELECT id FROM Employees WHERE id = @id");
+
+        if (checkEmployee.length === 0) {
+            return res.status(404).json({ message: "Personel Bulunamadı..." });
+        }
+
+        await pool.request()
+            .input("id", sql.Int, id)
+            .query("DELETE FROM Employees WHERE id = @id");
+
+        const newEmployees = await pool.request()
+            .query("SELECT * FROM Employees");
+
+        res.status(200).json({
+            message: "Personel Başarıyla Silindi...",
+            newEmployees: newEmployees.recordset
+        })
+    } catch (error) {
+        console.error("API Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" })
+    }
+}
+
 module.exports = {
+    getAllEmployees,
     login,
-    addNewEmployee
+    addNewEmployee,
+    deleteEmployee
 }

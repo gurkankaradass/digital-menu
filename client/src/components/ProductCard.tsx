@@ -1,4 +1,4 @@
-import { ProductType } from "../types/Types"
+import { CategoryType, ProductType } from "../types/Types"
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import EditIcon from '@mui/icons-material/Edit';
 import { useDispatch, useSelector } from "react-redux";
@@ -156,7 +156,7 @@ const ProductCard = (props: PropsType) => {
                                                         sx={{ marginBottom: "10px", width: "100%" }}
                                                     >
                                                         {
-                                                            categories?.map((category) => (
+                                                            categories?.map((category: CategoryType) => (
                                                                 <MenuItem key={category.id} value={category.name}>{category.name}</MenuItem>
                                                             ))
                                                         }

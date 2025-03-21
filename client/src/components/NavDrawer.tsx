@@ -1,7 +1,7 @@
 import Drawer from '@mui/material/Drawer'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
-import { setCafeInfo, setCurrentEmployee, setDrawer, setLoading } from '../redux/appSlice'
+import { setCafeInfo, setCurrentEmployee, setDrawer, setEmployees, setLoading } from '../redux/appSlice'
 import useCafe from '../hooks/useCafe'
 import HomeIcon from '@mui/icons-material/Home';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -9,13 +9,13 @@ import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FaLock } from "react-icons/fa";
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import PersonIcon from '@mui/icons-material/Person';
 import { useFormik } from 'formik';
-import { Dialog, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormHelperText, FormLabel, Radio, RadioGroup } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormHelperText, FormLabel, Radio, RadioGroup } from "@mui/material";
 import { schemaAddNewEmployee, schemaEditCafe, schemaLogin } from '../schema/Schema'
 import { CafeInfoType, EmployeeType } from '../types/Types'
 import { toast } from 'react-toastify'
@@ -32,15 +32,57 @@ interface CheckEmployeeType {
 
 const NavDrawer = () => {
 
-    const { drawer, currentEmployee } = useSelector((state: RootState) => state.app)
+    const { drawer, currentEmployee, employees } = useSelector((state: RootState) => state.app)
     const cafeInfo = useCafe();
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
+    const [open2, setOpen2] = useState(false);
+    const [open3, setOpen3] = useState(false);
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | undefined>(undefined);
     const [openEdit, setOpenEdit] = useState(false);
 
+    const getAllEmployee = async () => {
+        try {
+            dispatch(setLoading(true));
+            const response: EmployeeType[] = await EmployeeServices.getAllEmployees();
+            if (response) {
+                dispatch(setEmployees(response))
+                localStorage.setItem("employees", JSON.stringify(response));
+            }
+        } catch (error) {
+            toast.error("Personeller Gertirilemedi...");
+            console.error("Personeller Alınırken Hata: ", error);
+        } finally {
+            dispatch(setLoading(false));
+        }
+    };
+
+    const handleOpenDeleteDialog = (id: number | undefined) => {
+        setSelectedEmployeeId(id);
+        setOpen3(true);
+    };
+
+    const deleteEmployee = async (id?: number) => {
+        try {
+            dispatch(setLoading(true))
+            if (id) {
+                const response = await EmployeeServices.deleteEmployee(id)
+                if (response) {
+                    dispatch(setEmployees(response.newEmployees))
+                    localStorage.setItem("employees", JSON.stringify(response.newEmployees));
+                    toast.success(response.message);
+                    setOpen3(false)
+                }
+            }
+        } catch (error: any) {
+            toast.error(error);
+        } finally {
+            dispatch(setLoading(false))
+        }
+    }
 
     const submit = async (values: any, action: any) => {
         try {
@@ -54,6 +96,9 @@ const NavDrawer = () => {
                 resetForm();
                 navigate("/")
                 setOpen(false);
+                if (response.employee.role === "admin") {
+                    getAllEmployee();
+                }
             }
             else {
                 toast.error("E-Posta veya Şifre Hatalı")
@@ -106,10 +151,11 @@ const NavDrawer = () => {
             };
             const response = await EmployeeServices.addNewEmployee(payload);
             if (response && response.success) {
+                dispatch(setEmployees(response.newEmployees))
+                localStorage.setItem("employees", JSON.stringify(response.newEmployees));
                 toast.success(response.message)
                 resetForm2();
                 setOpen1(false)
-                dispatch(setDrawer(false))
             } else {
                 toast.error("Beklenmeyen bir hata oluştu.");
             }
@@ -169,7 +215,9 @@ const NavDrawer = () => {
         try {
             dispatch(setLoading(true));
             localStorage.removeItem("currentEmployee");
-            dispatch(setCurrentEmployee(null))
+            localStorage.removeItem("employees");
+            dispatch(setCurrentEmployee(null));
+            dispatch(setEmployees([]))
             dispatch(setDrawer(false))
             navigate("/")
             toast.success("Çıkış Yapıldı");
@@ -387,10 +435,59 @@ const NavDrawer = () => {
                             <div>
                                 {
                                     currentEmployee && currentEmployee.role === "admin" ?
-                                        <div onClick={() => setOpen1(true)} className="h-10 bg-white mx-[16px] my-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
-                                            <p>Personel Ekle</p>
+                                        <div onClick={() =>
+                                            setOpen2(true)} className="h-10 bg-white mx-[16px] my-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
+                                            <p>Personel Listesi</p>
                                         </div> : <div></div>
                                 }
+                                <Dialog open={open2} onClose={() => setOpen2(false)}>
+                                    <form className='w-64 font-[arial]' onSubmit={handleSubmit2}>
+                                        <DialogTitle sx={{ justifyContent: "center" }}>
+                                            <h3 className='text-center font-bold'>PERSONEL LİSTESİ</h3></DialogTitle>
+                                        <DialogContent>
+                                            <DialogContentText>
+                                                <p className="font-bold text-black text-lg">Yöneticiler</p>
+                                                <hr className='mb-5' />
+                                                {employees &&
+                                                    employees
+                                                        .filter((employee) => employee.role === "admin") // Sadece adminleri filtrele
+                                                        .map((employee) => (
+                                                            <div key={employee.id} className="flex flex-row justify-between mb-5">
+                                                                {employee.username}
+                                                            </div>
+                                                        ))}
+
+                                                <p className="font-bold text-black text-lg">Garsonlar</p>
+                                                <hr className='mb-5' />
+                                                {employees &&
+                                                    employees
+                                                        .filter((employee) => employee.role === "waiter") // Sadece garsonları filtrele
+                                                        .map((employee) => (
+                                                            <div key={employee.id} className="flex flex-row justify-between mb-3">
+                                                                {employee.username}
+                                                                <button className='text-red-700' onClick={() => handleOpenDeleteDialog(employee.id)}>Sil</button>
+                                                            </div>
+                                                        ))}
+                                            </DialogContentText>
+                                        </DialogContent>
+                                        <div onClick={() => setOpen1(true)} className="h-10 bg-black text-white mx-[16px] my-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
+                                            <p>Personel Ekle</p>
+                                        </div>
+                                        <Dialog open={open3} onClose={() => setOpen3(false)}>
+                                            <DialogTitle>
+                                                <p className="font-bold">Personeli Sil</p></DialogTitle>
+                                            <DialogContent>
+                                                <DialogContentText>
+                                                    Personeli silmek istediğinize emin misiniz?
+                                                </DialogContentText>
+                                            </DialogContent>
+                                            <DialogActions sx={{ marginBottom: "10px" }}>
+                                                <button onClick={() => setOpen3(false)} className='font-bold bg-slate-950  rounded-2xl p-1 px-3 text-white'>İptal</button>
+                                                <button onClick={() => deleteEmployee(selectedEmployeeId)} className='font-bold bg-slate-950  rounded-2xl p-1 px-3 text-white'>Evet, Sil</button>
+                                            </DialogActions>
+                                        </Dialog>
+                                    </form>
+                                </Dialog>
                                 <Dialog open={open1} onClose={() => setOpen1(false)}>
                                     <form className='w-64 font-[arial]' onSubmit={handleSubmit2}>
                                         <DialogTitle sx={{ justifyContent: "center" }}>

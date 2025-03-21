@@ -5,6 +5,7 @@ import { CafeInfoType, CategoryType, EmployeeType, ProductType } from '../types/
 export interface AppSliceType {
     cafeInfo: CafeInfoType | null,
     currentEmployee: EmployeeType | null,
+    employees: EmployeeType[],
     products: ProductType[],
     categories: CategoryType[],
     loading: boolean,
@@ -14,6 +15,7 @@ export interface AppSliceType {
 const initialState: AppSliceType = {
     cafeInfo: null,
     currentEmployee: null,
+    employees: [],
     products: [],
     categories: [],
     loading: false,
@@ -30,6 +32,9 @@ export const appSlice = createSlice({
         setCurrentEmployee: (state: AppSliceType, action: PayloadAction<EmployeeType | null>) => {
             state.currentEmployee = action.payload;
         },
+        setEmployees: (state: AppSliceType, actions: PayloadAction<EmployeeType[]>) => {
+            state.employees = actions.payload;
+        },
         setProducts: (state: AppSliceType, actions: PayloadAction<ProductType[]>) => {
             state.products = actions.payload;
         },
@@ -45,6 +50,6 @@ export const appSlice = createSlice({
     },
 })
 
-export const { setCafeInfo, setCurrentEmployee, setProducts, setCategories, setLoading, setDrawer } = appSlice.actions
+export const { setCafeInfo, setCurrentEmployee, setEmployees, setProducts, setCategories, setLoading, setDrawer } = appSlice.actions
 
 export default appSlice.reducer
