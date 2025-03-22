@@ -1,11 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import { CafeInfoType, CategoryType, EmployeeType, ProductType } from '../types/Types'
+import { CafeInfoType, CategoryType, EmployeeType, ProductType, TableType } from '../types/Types'
 
 export interface AppSliceType {
     cafeInfo: CafeInfoType | null,
     currentEmployee: EmployeeType | null,
     employees: EmployeeType[],
+    tables: TableType[],
     products: ProductType[],
     categories: CategoryType[],
     loading: boolean,
@@ -16,6 +17,7 @@ const initialState: AppSliceType = {
     cafeInfo: null,
     currentEmployee: null,
     employees: [],
+    tables: [],
     products: [],
     categories: [],
     loading: false,
@@ -35,6 +37,9 @@ export const appSlice = createSlice({
         setEmployees: (state: AppSliceType, actions: PayloadAction<EmployeeType[]>) => {
             state.employees = actions.payload;
         },
+        setTables: (state: AppSliceType, actions: PayloadAction<TableType[]>) => {
+            state.tables = actions.payload;
+        },
         setProducts: (state: AppSliceType, actions: PayloadAction<ProductType[]>) => {
             state.products = actions.payload;
         },
@@ -50,6 +55,6 @@ export const appSlice = createSlice({
     },
 })
 
-export const { setCafeInfo, setCurrentEmployee, setEmployees, setProducts, setCategories, setLoading, setDrawer } = appSlice.actions
+export const { setCafeInfo, setCurrentEmployee, setEmployees, setTables, setProducts, setCategories, setLoading, setDrawer } = appSlice.actions
 
 export default appSlice.reducer

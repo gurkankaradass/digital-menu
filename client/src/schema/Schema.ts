@@ -32,3 +32,7 @@ export const schemaCategory = yup.object().shape({
     name: yup.string().required("Kategori Adı Boş Geçilemez..."),
     image: yup.string().required("Kategori Fotoğrafı Boş Geçilemez...")
 })
+
+export const schemaTable = yup.object().shape({
+    table_number: yup.string().required("Masa Numarası Boş Geçilemez..."),
+})

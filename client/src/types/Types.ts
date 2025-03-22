@@ -31,9 +31,9 @@ export interface ProductType {
 }
 
 export interface TableType {
-    id: number,
-    tableNumber: number,
-    bill: number
+    id?: number,
+    table_number: number,
+    bill?: number
 }
 
 export interface OrderType {
