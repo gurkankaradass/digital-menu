@@ -1,4 +1,4 @@
-import { CategoryType, ProductType } from "../types/Types"
+import { CategoryType, OrderType, ProductType, TableType } from "../types/Types"
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import EditIcon from '@mui/icons-material/Edit';
 import { useDispatch, useSelector } from "react-redux";
@@ -11,20 +11,25 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, T
 import useProducts from "../hooks/useProducts";
 import { useFormik } from "formik";
 import { FormControl, FormHelperText, InputLabel, MenuItem, Select } from '@mui/material'
-import { schemaProduct } from "../schema/Schema";
+import { schemaProduct, schemaTable } from "../schema/Schema";
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
+import OrderServices from "../services/OrderServices";
 
 interface PropsType {
     product: ProductType
 }
 
 const ProductCard = (props: PropsType) => {
-    const { id, name, image, price, categoryName } = props.product
-    const { currentEmployee, categories } = useSelector((state: RootState) => state.app)
+    const { id, name, image, price } = props.product
+    const { currentEmployee, categories, tables } = useSelector((state: RootState) => state.app)
     const { getProductByCategoryName } = useProducts();
     const dispatch = useDispatch();
+    const [count, setCount] = useState(0)
 
     const [openEdit, setOpenEdit] = useState(false);
     const [open, setOpen] = useState(false);
+    const [openOrder, setOpenOrder] = useState(false);
 
     const categoryNameFromUrl = decodeURIComponent(window.location.pathname.split('/')[1]);
 
@@ -73,7 +78,30 @@ const ProductCard = (props: PropsType) => {
         }
     };
 
-    const { values, handleSubmit, handleChange, setFieldValue, errors, resetForm } = useFormik({
+    const orderProduct = async () => {
+        try {
+            dispatch(setLoading(true));
+            const payload: OrderType = {
+                table_id: Number(values1.table),
+                product_id: id,
+                quantity: count
+            };
+            const response = await OrderServices.orderProduct(payload);
+            if (response && response.success) {
+                toast.success(response.message);
+                resetTable();
+                setOpenOrder(false);
+            } else {
+                toast.error("Beklenmeyen bir hata oluştu.");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Bir hata oluştu.");
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
+
+    const formik = useFormik({
         initialValues: {
             name: name || "",
             image: image || "",
@@ -84,9 +112,29 @@ const ProductCard = (props: PropsType) => {
         validationSchema: schemaProduct,
         enableReinitialize: true
     });
+    const { values: values, handleSubmit: handleSubmit, setFieldValue: setFieldValue, handleChange: handleChange, errors: errors, resetForm: resetForm } = formik;
+
+    const formik1 = useFormik({
+        initialValues: {
+            table: ""
+        },
+        onSubmit: orderProduct,
+        validationSchema: schemaTable,
+        enableReinitialize: true
+    });
+    const { values: values1, handleChange: handleChange1, errors: errors1, resetForm: resetForm1 } = formik1;
 
     const handleClose = () => {
         setOpenEdit(false);
+    }
+
+    const handleCloseOrder = () => {
+        setOpenOrder(false);
+    }
+
+    const resetTable = () => {
+        setCount(0);
+        resetForm1();
     }
 
     const reset = () => {
@@ -116,11 +164,60 @@ const ProductCard = (props: PropsType) => {
                                 </button>
                             </div> :
                             currentEmployee?.role === "waiter" ?
-                                <button onClick={() => { }}>
+                                <button onClick={() => { setOpenOrder(true) }}>
                                     <PostAddIcon className="cursor-pointer" />
                                 </button> :
                                 <div></div>
                     }
+                    <Dialog
+                        open={openOrder}
+                        onClose={handleCloseOrder}
+                    >
+                        <DialogContent
+                        >
+                            <h2 className='text-3xl font-bold text-center'>{name}</h2>
+                            <div className='p-2 justify-center items-center flex flex-col'>
+                                <div>
+                                    <img src={image} alt={name} className="object-cover w-full h-28 rounded-2xl my-3" />
+                                </div>
+                                <div className='flex flex-col justify-center items-center font-bold'>
+                                    <p className='text-4xl'>{price}₺</p>
+                                    <div className='flex flex-row justify-center items-center my-1'>
+                                        <p>Adet: </p><RemoveCircleIcon onClick={() => {
+                                            if (count > 0) {
+                                                setCount(count - 1)
+                                            }
+                                        }} sx={{ margin: "0px 5px", cursor: "pointer" }} /> <p className="text-3xl">{count}</p> <AddCircleIcon onClick={() => setCount(count + 1)} sx={{ margin: "0px 5px", cursor: "pointer" }} />
+                                    </div>
+                                    <FormControl sx={{ margin: "10px 0px" }} fullWidth>
+                                        <InputLabel sx={{ zIndex: "1" }} id="category-label">Masa Seç</InputLabel>
+                                        <Select
+                                            size='medium'
+                                            labelId="table-label"
+                                            id="table"
+                                            name="table"
+                                            value={values1.table}
+                                            onChange={handleChange1}
+                                            sx={{ marginBottom: "10px", width: "100%" }}
+                                        >
+                                            {
+                                                tables?.map((table: TableType) => (
+                                                    <MenuItem key={table.id} value={table.id}>{table.table_number} Numaralı Masa</MenuItem>
+                                                ))
+                                            }
+                                        </Select>
+                                        <FormHelperText>
+                                            {errors1.table && <span style={{ marginLeft: "-13px", marginTop: "-10px" }} className='text-red-800'>{errors1.table}</span>}
+                                        </FormHelperText>
+                                    </FormControl>
+                                    <div>
+                                        <button type="submit" onClick={orderProduct} className="bg-black text-white p-2 rounded-3xl w-full mb-2">Sipariş Ver</button>
+                                        <button type="reset" onClick={resetTable} className="bg-black text-white p-2 rounded-3xl w-full">Temizle</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                     <div>
                         <Dialog
                             open={openEdit}

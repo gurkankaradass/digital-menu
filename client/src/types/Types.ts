@@ -37,10 +37,9 @@ export interface TableType {
 }
 
 export interface OrderType {
-    id: number,
-    tableNumber: number,
-    productName: string,
-    productImage: string,
+    id?: number,
+    table_id: number,
+    product_id?: number,
     quantity: number,
-    totalPrice: number
+    totalPrice?: number
 }

@@ -23,7 +23,6 @@ const HomePage = () => {
     const submit = async (values: any, action: any) => {
         try {
             dispatch(setLoading(true));
-
             const payload: CategoryType = {
                 name: values.name,
                 image: values.image
