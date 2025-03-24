@@ -5,6 +5,15 @@ import axiosInstance from "../config/AxiosConfig";
 
 class OrderServices {
 
+    async getOrderByTableNumber(table_number: number): Promise<any> {
+        try {
+            const response: AxiosResponse<any> = await axiosInstance.get(`api/order/${table_number}`)
+            return response.data
+        } catch (error: any) {
+            throw error.response?.data?.message || "Sipariş Getirilemedi...";
+        }
+    }
+
     async orderProduct(payload: OrderType): Promise<any> {
         console.log(payload)
         try {

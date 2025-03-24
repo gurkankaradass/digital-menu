@@ -691,6 +691,18 @@ const NavDrawer = () => {
                                     </form>
                                 </Dialog>
                             </div>
+                            <div>
+                                {
+                                    currentEmployee ?
+                                        <div onClick={() => {
+                                            navigate("/tables")
+                                            dispatch(setDrawer(false))
+                                        }}
+                                            className="h-10 bg-white mx-[16px] my-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
+                                            <p>Siparişler</p>
+                                        </div> : <div></div>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div >

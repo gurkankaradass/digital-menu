@@ -1,5 +1,42 @@
 const { poolPromise, sql } = require('../config/db');
 
+const getOrderByTableNumber = async (req, res) => {
+    const table_number = parseInt(req.params.table_number);
+
+    if (!table_number) {
+        return res.status(400).json({ message: "Geçersiz masa numarası!" });
+    }
+
+    try {
+        let pool = await poolPromise;
+
+        let result = await pool
+            .request()
+            .input("table_number", sql.Int, table_number)
+            .query(`
+            SELECT 
+                Tables.table_number,
+                Products.name AS product_name,
+                Orders.quantity,
+                Orders.total_price,
+                Tables.bill
+            FROM Orders
+            JOIN Tables ON Orders.table_id = Tables.id
+            JOIN Products ON Orders.product_id = Products.id
+            WHERE Tables.table_number = @table_number
+            ORDER BY Orders.id DESC
+        `);
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: "Bu masa için sipariş bulunamadı." });
+        }
+
+        res.status(200).json(result.recordset);
+    } catch (error) {
+        res.status(500).json({ message: "Sunucu hatası!" });
+    }
+}
+
 const orderProduct = async (req, res) => {
     const { table_id, product_id, quantity } = req.body;
 
@@ -76,5 +113,6 @@ const orderProduct = async (req, res) => {
 }
 
 module.exports = {
+    getOrderByTableNumber,
     orderProduct
 }
