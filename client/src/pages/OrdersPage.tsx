@@ -24,7 +24,6 @@ const OrdersPage = () => {
     const [order, setOrder] = useState<OrderTypeRes[]>([]);
     const [open, setOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
-    const [openDeleteAll, setOpenDeleteAll] = useState(false);
     const [selectedTableNumber, setSelectedTableNumber] = useState<number | undefined>(undefined);
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -33,6 +32,7 @@ const OrdersPage = () => {
         getOrder(table_number)
         setSelectedTableNumber(table_number);
     }
+
     const getOrder = async (table_number: number) => {
         try {
             dispatch(setLoading(true));
@@ -45,6 +45,21 @@ const OrdersPage = () => {
             toast.warning("Bu Masa İçin Sipariş Bulunamadı...");
         } finally {
             dispatch(setLoading(false));
+        }
+    }
+
+    const deleteOrder = async (table_number: number, product_name: string) => {
+        try {
+            dispatch(setLoading(true))
+            const response = await OrderServices.deleteOrder(table_number, product_name);
+            if (response) {
+                toast.success(response.message);
+                setOpen(false)
+            }
+        } catch (error: any) {
+            toast.error(error);
+        } finally {
+            dispatch(setLoading(false))
         }
     }
 
@@ -78,7 +93,8 @@ const OrdersPage = () => {
                             <h3 className='text-center font-bold'>SİPARİŞLER</h3></DialogTitle>
                         <DialogContent>
                             <DialogContentText>
-                                <div className="flex w-64 justify-between font-bold mb-2">
+                                <h1 className="font-bold mb-2">{selectedTableNumber} Numaralı Masa:</h1>
+                                <div className="flex w-64 justify-between font-bold">
                                     <h4>Ürün</h4>
                                     <div className="flex justify-between">
                                         <h4>Adet</h4>
@@ -93,25 +109,33 @@ const OrdersPage = () => {
                                             <div className="flex justify-evenly">
                                                 <p>x{order.quantity}</p>
                                                 <p className="mx-5">{order.total_price}₺</p>
-                                                <button className='text-red-700 mr-2' onClick={() => setOpenDelete(true)}>Sil</button>
+                                                <button className='text-red-700 mr-2' onClick={() => deleteOrder(order.table_number, order.product_name)}>Sil</button>
                                             </div>
                                         </div>
                                     ))
                                 }
-                                <h1 className="font-bold">{selectedTableNumber} Numaralı Masa</h1>
+                                {order.length > 0 && (
+                                    <div className="flex justify-end w-full font-bold mt-3 border-t pt-2">
+                                        <p>Toplam Tutar: {order[order.length - 1].bill}₺</p>
+                                    </div>
+                                )}
+                                {
+                                    currentEmployee && currentEmployee.role === "admin" &&
+                                    <button onClick={() => setOpenDelete(true)} className="w-full text-center bg-black text-white rounded-lg mt-2 p-1">Hesap Ödendi</button>
+                                }
                             </DialogContentText>
                         </DialogContent>
                         <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
                             <DialogTitle>
-                                <p className="font-bold">Masayı Sil</p></DialogTitle>
+                                <p className="font-bold">Hesap Ödeme</p></DialogTitle>
                             <DialogContent>
                                 <DialogContentText>
-                                    Masayı silmek istediğinize emin misiniz?
+                                    Hesap ödendi mi?
                                 </DialogContentText>
                             </DialogContent>
                             <DialogActions sx={{ marginBottom: "10px" }}>
                                 <button onClick={() => setOpenDelete(false)} className='font-bold bg-slate-950  rounded-2xl p-1 px-3 text-white'>İptal</button>
-                                <button className='font-bold bg-slate-950  rounded-2xl p-1 px-3 text-white'>Evet, Sil</button>
+                                <button className='font-bold bg-slate-950 rounded-2xl p-1 px-3 text-white'>Evet</button>
                             </DialogActions>
                         </Dialog>
                     </Dialog>

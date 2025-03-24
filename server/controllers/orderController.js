@@ -112,7 +112,40 @@ const orderProduct = async (req, res) => {
     }
 }
 
+const deleteOrder = async (req, res) => {
+    const { table_number, product_name } = req.query; // Query params'tan çekiyoruz
+
+    if (!table_number || !product_name) {
+        return res.status(400).json({ message: "Eksik parametreler!" });
+    }
+
+    try {
+        const pool = await poolPromise;
+        const checkOrder = await pool.request()
+            .input("table_number", sql.Int, table_number)
+            .input("product_name", sql.NVarChar, product_name)
+            .query("SELECT o.id FROM Orders o JOIN Products p ON o.product_id = p.id JOIN Tables t ON o.table_id = t.id WHERE p.name = @product_name AND t.table_number = @table_number");
+
+        if (checkOrder.recordset.length === 0) {
+            return res.status(404).json({ message: "Ürün Bulunamadı..." });
+        }
+
+        const orderId = checkOrder.recordset[0].id;
+
+        await pool.request()
+            .input("orderId", sql.Int, orderId)
+            .query("DELETE FROM Orders WHERE id = @orderId");
+
+        res.status(200).json({ message: "Ürün Başarıyla Silindi" });
+    } catch (error) {
+        console.error("API Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" })
+    }
+}
+
+
 module.exports = {
     getOrderByTableNumber,
-    orderProduct
+    orderProduct,
+    deleteOrder
 }

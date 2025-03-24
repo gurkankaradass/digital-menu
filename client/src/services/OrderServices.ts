@@ -31,6 +31,20 @@ class OrderServices {
             throw new Error(errorMessage);
         }
     }
+
+    async deleteOrder(table_number: number, product_name: string): Promise<any> {
+        try {
+            const response = await axiosInstance.delete(`api/order/deleteOrder`, { params: { table_number, product_name } })
+            return {
+                success: true,
+                message: response.data.message
+            }
+        } catch (error: any) {
+            console.error("Ürün Silinemedi...", error);
+            throw error.response?.data?.message || "Ürün silinemedi...";
+        }
+    }
+
 }
 
 export default new OrderServices
