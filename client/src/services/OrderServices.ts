@@ -45,6 +45,19 @@ class OrderServices {
         }
     }
 
+    async deleteAllOrder(table_number: number): Promise<any> {
+        try {
+            const response = await axiosInstance.delete(`api/order/deleteAllOrder`, { params: { table_number } })
+            return {
+                success: true,
+                message: response.data.message
+            }
+        } catch (error: any) {
+            console.error("Siparişler Silinemedi...", error);
+            throw error.response?.data?.message || "Siparişler silinemedi...";
+        }
+    }
+
 }
 
 export default new OrderServices

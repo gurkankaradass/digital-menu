@@ -47,7 +47,6 @@ const orderProduct = async (req, res) => {
     try {
         let pool = await poolPromise;
 
-        // Ürünün fiyatını çek
         let productQuery = await pool
             .request()
             .input("product_id", sql.Int, product_id)
@@ -60,7 +59,6 @@ const orderProduct = async (req, res) => {
         let price = productQuery.recordset[0].price;
         let additional_price = price * quantity;
 
-        // Aynı ürün daha önce eklenmiş mi kontrol et
         let existingOrderQuery = await pool
             .request()
             .input("table_id", sql.Int, table_id)
@@ -68,7 +66,6 @@ const orderProduct = async (req, res) => {
             .query("SELECT id, quantity, total_price FROM Orders WHERE table_id = @table_id AND product_id = @product_id");
 
         if (existingOrderQuery.recordset.length > 0) {
-            // Eğer ürün zaten sipariş edilmişse miktarı ve toplam fiyatı güncelle
             let existingOrder = existingOrderQuery.recordset[0];
             let newQuantity = existingOrder.quantity + quantity;
             let newTotalPrice = existingOrder.total_price + additional_price;
@@ -81,7 +78,6 @@ const orderProduct = async (req, res) => {
                 .query("UPDATE Orders SET quantity = @newQuantity, total_price = @newTotalPrice WHERE id = @order_id");
 
         } else {
-            // Eğer sipariş daha önce verilmemişse yeni sipariş ekle
             await pool
                 .request()
                 .input("table_id", sql.Int, table_id)
@@ -91,7 +87,6 @@ const orderProduct = async (req, res) => {
                 .query("INSERT INTO Orders (table_id, product_id, quantity, total_price) VALUES (@table_id, @product_id, @quantity, @total_price)");
         }
 
-        // Güncellenmiş toplam masanın hesabını hesapla
         await pool
             .request()
             .input("table_id", sql.Int, table_id)
@@ -113,10 +108,10 @@ const orderProduct = async (req, res) => {
 }
 
 const deleteOrder = async (req, res) => {
-    const { table_number, product_name } = req.query; // Query params'tan çekiyoruz
+    const { table_number, product_name } = req.query;
 
     if (!table_number || !product_name) {
-        return res.status(400).json({ message: "Eksik parametreler!" });
+        return res.status(400).json({ message: "Eksik parametreler var!" });
     }
 
     try {
@@ -143,9 +138,41 @@ const deleteOrder = async (req, res) => {
     }
 }
 
+const deleteAllOrder = async (req, res) => {
+    const { table_number } = req.query;
+
+    if (!table_number) {
+        return res.status(400).json({ message: "Masa numarası belirtilmelidir!" });
+    }
+
+    try {
+        const pool = await poolPromise;
+
+        const tableResult = await pool.request()
+            .input("table_number", sql.Int, table_number)
+            .query("SELECT id FROM Tables WHERE table_number = @table_number");
+
+        if (tableResult.recordset.length === 0) {
+            return res.status(404).json({ message: "Masa bulunamadı!" });
+        }
+
+        const tableId = tableResult.recordset[0].id;
+
+        await pool.request()
+            .input("tableId", sql.Int, tableId)
+            .query("DELETE FROM Orders WHERE table_id = @tableId");
+
+        res.status(200).json({ message: "Hesap Alındı..." });
+    } catch (error) {
+        console.error("API Hatası:", error);
+        res.status(500).json({ message: "Sunucu hatası" });
+    }
+}
+
 
 module.exports = {
     getOrderByTableNumber,
     orderProduct,
-    deleteOrder
+    deleteOrder,
+    deleteAllOrder
 }

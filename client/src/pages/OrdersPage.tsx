@@ -63,6 +63,28 @@ const OrdersPage = () => {
         }
     }
 
+    const handleDeleteAllOrder = () => {
+        if (selectedTableNumber) {
+            deleteAllOrder(selectedTableNumber)
+        }
+    }
+
+    const deleteAllOrder = async (table_number: number) => {
+        try {
+            dispatch(setLoading(true))
+            const response = await OrderServices.deleteAllOrder(table_number);
+            if (response) {
+                toast.success(response.message);
+                setOpenDelete(false)
+                setOpen(false)
+            }
+        } catch (error: any) {
+            toast.error(error);
+        } finally {
+            dispatch(setLoading(false))
+        }
+    }
+
     return (
         <div>
             <Navbar />
@@ -135,7 +157,7 @@ const OrdersPage = () => {
                             </DialogContent>
                             <DialogActions sx={{ marginBottom: "10px" }}>
                                 <button onClick={() => setOpenDelete(false)} className='font-bold bg-slate-950  rounded-2xl p-1 px-3 text-white'>İptal</button>
-                                <button className='font-bold bg-slate-950 rounded-2xl p-1 px-3 text-white'>Evet</button>
+                                <button onClick={handleDeleteAllOrder} className='font-bold bg-slate-950 rounded-2xl p-1 px-3 text-white'>Evet</button>
                             </DialogActions>
                         </Dialog>
                     </Dialog>
