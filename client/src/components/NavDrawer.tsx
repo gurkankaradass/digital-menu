@@ -44,11 +44,7 @@ const NavDrawer = () => {
     const [open1, setOpen1] = useState(false);
     const [open2, setOpen2] = useState(false);
     const [open3, setOpen3] = useState(false);
-    const [open4, setOpen4] = useState(false);
-    const [open5, setOpen5] = useState(false);
-    const [open6, setOpen6] = useState(false);
     const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | undefined>(undefined);
-    const [selectedTableId, setSelectedTableId] = useState<number | undefined>(undefined);
     const [openEdit, setOpenEdit] = useState(false);
 
     const getAllEmployee = async () => {
@@ -82,30 +78,6 @@ const NavDrawer = () => {
                     localStorage.setItem("employees", JSON.stringify(response.newEmployees));
                     toast.success(response.message);
                     setOpen3(false)
-                }
-            }
-        } catch (error: any) {
-            toast.error(error);
-        } finally {
-            dispatch(setLoading(false))
-        }
-    }
-
-    const handleOpenDeleteDialogTable = (id: number | undefined) => {
-        setSelectedTableId(id);
-        setOpen5(true);
-    };
-
-    const deleteTable = async (id?: number) => {
-        try {
-            dispatch(setLoading(true))
-            if (id) {
-                const response = await TableServices.deleteEmployee(id)
-                if (response) {
-                    dispatch(setTables(response.newTables))
-                    localStorage.setItem("tables", JSON.stringify(response.newTables));
-                    toast.success(response.message);
-                    setOpen5(false)
                 }
             }
         } catch (error: any) {
@@ -198,29 +170,6 @@ const NavDrawer = () => {
         }
     };
 
-    const addNewTable = async (values3: any, action: any) => {
-        try {
-            dispatch(setLoading(true));
-            const payload: TableType = {
-                table_number: values3.table_number
-            };
-            const response = await TableServices.addNewTable(payload);
-            if (response && response.success) {
-                dispatch(setTables(response.newTables))
-                localStorage.setItem("tables", JSON.stringify(response.newTables));
-                toast.success(response.message)
-                resetForm3();
-                setOpen6(false)
-            } else {
-                toast.error("Beklenmeyen bir hata oluştu.");
-            }
-        } catch (error: any) {
-            toast.error(error.message || "Bir hata oluştu.");
-        } finally {
-            dispatch(setLoading(false));
-        }
-    };
-
     const formik = useFormik({
         initialValues: {
             username: '',
@@ -260,21 +209,10 @@ const NavDrawer = () => {
     });
     const { values: values2, handleSubmit: handleSubmit2, handleChange: handleChange2, errors: errors2, resetForm: resetForm2 } = formik2;
 
-    const formik3 = useFormik({
-        initialValues: {
-            table_number: ""
-        },
-        onSubmit: addNewTable,
-        validationSchema: schemaTable,
-        enableReinitialize: true
-    });
-    const { values: values3, handleSubmit: handleSubmit3, handleChange: handleChange3, errors: errors3, resetForm: resetForm3 } = formik3;
-
     const reset = () => {
         resetForm();
         resetForm1();
         resetForm2();
-        resetForm3();
     }
 
     const logout = async () => {
@@ -626,80 +564,13 @@ const NavDrawer = () => {
                             </div>
                             <div>
                                 {
-                                    currentEmployee && currentEmployee.role === "admin" ?
-                                        <div onClick={() =>
-                                            setOpen4(true)} className="h-10 bg-white mx-[16px] my-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
-                                            <p>Masa Listesi</p>
-                                        </div> : <div></div>
-                                }
-                                <Dialog open={open4} onClose={() => setOpen4(false)}>
-                                    <form className='w-64 font-[arial]' onSubmit={handleSubmit2}>
-                                        <DialogTitle sx={{ justifyContent: "center" }}>
-                                            <h3 className='text-center font-bold'>MASA LİSTESİ</h3></DialogTitle>
-                                        <DialogContent>
-                                            <DialogContentText>
-                                                {tables && tables.map((table) => (
-                                                    <div key={table.id} className="flex flex-row justify-between mb-3">
-                                                        {table.table_number} Numaralı Masa
-                                                        <button className='text-red-700' onClick={() => handleOpenDeleteDialogTable(table.id)}>Sil</button>
-                                                    </div>
-                                                ))}
-                                            </DialogContentText>
-                                        </DialogContent>
-                                        <div onClick={() => setOpen6(true)} className="h-10 bg-black text-white mx-[16px] my-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
-                                            <p>Masa Ekle</p>
-                                        </div>
-                                        <Dialog open={open5} onClose={() => setOpen5(false)}>
-                                            <DialogTitle>
-                                                <p className="font-bold">Masayı Sil</p></DialogTitle>
-                                            <DialogContent>
-                                                <DialogContentText>
-                                                    Masayı silmek istediğinize emin misiniz?
-                                                </DialogContentText>
-                                            </DialogContent>
-                                            <DialogActions sx={{ marginBottom: "10px" }}>
-                                                <button onClick={() => setOpen5(false)} className='font-bold bg-slate-950  rounded-2xl p-1 px-3 text-white'>İptal</button>
-                                                <button onClick={() => deleteTable(selectedTableId)} className='font-bold bg-slate-950  rounded-2xl p-1 px-3 text-white'>Evet, Sil</button>
-                                            </DialogActions>
-                                        </Dialog>
-                                    </form>
-                                </Dialog>
-                                <Dialog open={open6} onClose={() => setOpen6(false)}>
-                                    <form className='w-64 font-[arial]' onSubmit={handleSubmit3}>
-                                        <DialogTitle sx={{ justifyContent: "center" }}>
-                                            <h3 className='text-center font-bold'>MASA EKLE</h3></DialogTitle>
-                                        <DialogContent>
-                                            <DialogContentText>
-                                                <div>
-                                                    <TextField
-                                                        id="table_number"
-                                                        label="Masa Numarası"
-                                                        type='number'
-                                                        value={values3.table_number}
-                                                        onChange={handleChange3}
-                                                        sx={{ marginBottom: "10px", width: "100%" }}
-                                                        variant="standard"
-                                                        helperText={errors3.table_number && <span className='text-red-800'>{errors3.table_number}</span>}
-                                                    />
-                                                </div>
-                                            </DialogContentText>
-                                        </DialogContent>
-                                        <div className='flex flex-row justify-center mb-2 text-white'>
-                                            <button type='submit' className='font-bold bg-slate-950  rounded-2xl p-1 px-3 mr-3'>Masa Ekle</button>
-                                            <button type='reset' onClick={reset} className='font-bold bg-slate-950  rounded-2xl p-1 px-3'>Temizle</button>
-                                        </div>
-                                    </form>
-                                </Dialog>
-                            </div>
-                            <div>
-                                {
                                     currentEmployee ?
                                         <div onClick={() => {
                                             navigate("/tables")
                                             dispatch(setDrawer(false))
                                         }}
                                             className="h-10 bg-white mx-[16px] my-5 rounded-lg text-center flex flex-row justify-center items-center font-bold cursor-pointer font-[arial]">
-                                            <p>Siparişler</p>
+                                            <p>Masalar ve Siparişler</p>
                                         </div> : <div></div>
                                 }
                             </div>

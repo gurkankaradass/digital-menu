@@ -40,12 +40,12 @@ const CategoryPage = () => {
                 price: values.price
             };
             const response = await ProductServices.addNewProduct(payload);
-            console.log(response)
             if (response && response.success) {
                 dispatch(setProducts(response.newProducts))
                 localStorage.setItem("categoryProducts", JSON.stringify(response.newProducts));
                 toast.success(response.message)
                 setOpen(false)
+                resetForm();
             } else {
                 toast.error("Beklenmeyen bir hata oluştu.");
             }
