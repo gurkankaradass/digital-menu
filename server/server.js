@@ -24,6 +24,7 @@ app.use("/api/table", tableRoutes);
 app.use("/api/order", orderRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Sunucu ${PORT} Portunda Çalışıyor...`)
+const HOST = process.env.HOST || "0.0.0.0";
+app.listen(PORT, HOST, () => {
+    console.log(`Server is running on http://${HOST}:${PORT}`);
 });
