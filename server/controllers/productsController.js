@@ -1,9 +1,35 @@
 const pool = require("../config/db");
+const supabase = require("../config/supabase");
+const path = require("path");
 
 const getImageUrl = (req, path) => {
     if (!path) return path;
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
     return `${req.protocol}://${req.get('host')}/${path}`;
+};
+
+const uploadToSupabase = async (file) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9]/g, "_");
+    const fileName = `${base}-${uniqueSuffix}${ext}`;
+
+    const { data, error } = await supabase.storage
+        .from('cafe-resimleri')
+        .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+            upsert: true
+        });
+
+    if (error) {
+        throw error;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+        .from('cafe-resimleri')
+        .getPublicUrl(fileName);
+
+    return publicUrlData.publicUrl;
 };
 
 const getProductByCategoryName = async (req, res) => {
@@ -34,13 +60,17 @@ const getProductByCategoryName = async (req, res) => {
 
 const addNewProduct = async (req, res) => {
     const { name, categoryName, price } = req.body;
-    const imagePath = req.file ? `uploads/${req.file.filename}` : req.body.image;
+    const hasImage = req.file || req.body.image;
 
-    if (!name || !categoryName || !imagePath || !price) {
+    if (!name || !categoryName || !hasImage || !price) {
         return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
     }
 
     try {
+        let imagePath = req.body.image;
+        if (req.file) {
+            imagePath = await uploadToSupabase(req.file);
+        }
         let formattedPrice = price;
 
         if (formattedPrice % 1 === 0) {
@@ -120,13 +150,17 @@ const deleteProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     const { id } = req.params;
     const { name, price, categoryName } = req.body;
-    const imagePath = req.file ? `uploads/${req.file.filename}` : req.body.image;
+    const hasImage = req.file || req.body.image;
 
-    if (!name || !imagePath || !price || !categoryName) {
+    if (!name || !hasImage || !price || !categoryName) {
         return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
     }
 
     try {
+        let imagePath = req.body.image;
+        if (req.file) {
+            imagePath = await uploadToSupabase(req.file);
+        }
         let formattedPrice = price;
 
         if (formattedPrice % 1 === 0) {

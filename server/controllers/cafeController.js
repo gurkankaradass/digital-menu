@@ -1,9 +1,35 @@
 const pool = require("../config/db");
+const supabase = require("../config/supabase");
+const path = require("path");
 
 const getImageUrl = (req, path) => {
     if (!path) return path;
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
     return `${req.protocol}://${req.get('host')}/${path}`;
+};
+
+const uploadToSupabase = async (file) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9]/g, "_");
+    const fileName = `${base}-${uniqueSuffix}${ext}`;
+
+    const { data, error } = await supabase.storage
+        .from('cafe-resimleri')
+        .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+            upsert: true
+        });
+
+    if (error) {
+        throw error;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+        .from('cafe-resimleri')
+        .getPublicUrl(fileName);
+
+    return publicUrlData.publicUrl;
 };
 
 const getCafeInfo = async (req, res) => {
@@ -28,13 +54,17 @@ const getCafeInfo = async (req, res) => {
 const updateCafeInfo = async (req, res) => {
     const { id } = req.params;
     const { name, phone, location, address, map, instagram } = req.body;
-    const logoPath = req.file ? `uploads/${req.file.filename}` : req.body.logo;
+    const hasLogo = req.file || req.body.logo;
 
-    if (!name || !logoPath || !phone || !location || !address || !map || !instagram) {
+    if (!name || !hasLogo || !phone || !location || !address || !map || !instagram) {
         return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
     }
 
     try {
+        let logoPath = req.body.logo;
+        if (req.file) {
+            logoPath = await uploadToSupabase(req.file);
+        }
         await pool.query(
             `UPDATE "Cafe_Info" 
             SET 
