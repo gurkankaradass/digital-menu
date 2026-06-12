@@ -1,4 +1,5 @@
-const { sql, poolPromise } = require("../config/db")
+const { sql, poolPromise } = require("../config/db");
+const bcrypt = require("bcryptjs");
 
 const getAllEmployees = async (req, res) => {
     try {
@@ -31,7 +32,14 @@ const login = async (req, res) => {
 
         const employee = result.recordset[0];
 
-        if (password !== employee.password) {
+        let isMatch = false;
+        if (employee.password.startsWith("$2a$") || employee.password.startsWith("$2b$") || employee.password.startsWith("$2y$")) {
+            isMatch = await bcrypt.compare(password, employee.password);
+        } else {
+            isMatch = (password === employee.password);
+        }
+
+        if (!isMatch) {
             return res.status(404).json({ message: "Şifre Hatalı..." })
         }
 
@@ -40,7 +48,6 @@ const login = async (req, res) => {
             employee: {
                 id: employee.id,
                 username: employee.username,
-                password: employee.password,
                 role: employee.role
             }
         })
@@ -69,9 +76,11 @@ const addNewEmployee = async (req, res) => {
             return res.status(400).json({ message: "Personel Zaten Mevcut" });;
         }
 
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         await pool.request()
             .input("username", sql.NVarChar, username)
-            .input("password", sql.NVarChar, password)
+            .input("password", sql.NVarChar, hashedPassword)
             .input("role", sql.NVarChar, role)
             .query(`INSERT INTO Employees (username, password, role) VALUES (@username, @password, @role)`)
 
