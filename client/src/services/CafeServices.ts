@@ -21,7 +21,9 @@ class CafeServices {
             formData.append("address", payload.address);
             formData.append("map", payload.map);
             formData.append("instagram", payload.instagram);
-            if (payload.logo) {
+            if (payload.logo instanceof File) {
+                formData.append("logo", payload.logo);
+            } else if (typeof payload.logo === "string" && payload.logo) {
                 formData.append("logo", payload.logo);
             }
             const response = await axiosInstance.put(`api/cafe/update/${id}`, formData)

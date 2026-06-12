@@ -34,5 +34,9 @@ export const schemaCategory = yup.object().shape({
 })
 
 export const schemaTable = yup.object().shape({
+    table: yup.string().required("Masa Seçilmelidir..."),
+})
+
+export const schemaTableAdd = yup.object().shape({
     table_number: yup.string().required("Masa Numarası Boş Geçilemez..."),
 })

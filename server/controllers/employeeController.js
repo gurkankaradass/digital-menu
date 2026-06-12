@@ -85,7 +85,7 @@ const addNewEmployee = async (req, res) => {
             .query(`INSERT INTO Employees (username, password, role) VALUES (@username, @password, @role)`)
 
         const newEmployees = await pool.request()
-            .query("SELECT * FROM Employees");
+            .query("SELECT id, username, role FROM Employees");
 
         res.status(200).json({
             message: "Personel Eklendi...",
@@ -108,7 +108,7 @@ const deleteEmployee = async (req, res) => {
             .input("id", sql.Int, id)
             .query("SELECT id FROM Employees WHERE id = @id");
 
-        if (checkEmployee.length === 0) {
+        if (checkEmployee.recordset.length === 0) {
             return res.status(404).json({ message: "Personel Bulunamadı..." });
         }
 

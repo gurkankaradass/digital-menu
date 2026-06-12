@@ -119,17 +119,31 @@ const deleteOrder = async (req, res) => {
         const checkOrder = await pool.request()
             .input("table_number", sql.Int, table_number)
             .input("product_name", sql.NVarChar, product_name)
-            .query("SELECT o.id FROM Orders o JOIN Products p ON o.product_id = p.id JOIN Tables t ON o.table_id = t.id WHERE p.name = @product_name AND t.table_number = @table_number");
+            .query("SELECT o.id, t.id AS table_id FROM Orders o JOIN Products p ON o.product_id = p.id JOIN Tables t ON o.table_id = t.id WHERE p.name = @product_name AND t.table_number = @table_number");
 
         if (checkOrder.recordset.length === 0) {
             return res.status(404).json({ message: "Ürün Bulunamadı..." });
         }
 
         const orderId = checkOrder.recordset[0].id;
+        const tableId = checkOrder.recordset[0].table_id;
 
         await pool.request()
             .input("orderId", sql.Int, orderId)
             .query("DELETE FROM Orders WHERE id = @orderId");
+
+        // Masa toplamını güncelle
+        await pool.request()
+            .input("tableId", sql.Int, tableId)
+            .query(`
+                UPDATE Tables 
+                SET bill = (
+                    SELECT COALESCE(SUM(total_price), 0) 
+                    FROM Orders 
+                    WHERE Orders.table_id = Tables.id
+                ) 
+                WHERE id = @tableId
+            `);
 
         res.status(200).json({ message: "Ürün Başarıyla Silindi" });
     } catch (error) {

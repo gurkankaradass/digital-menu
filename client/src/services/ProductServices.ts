@@ -56,7 +56,9 @@ class ProductServices {
             formData.append("name", payload.name);
             formData.append("categoryName", payload.categoryName);
             formData.append("price", String(payload.price));
-            if (payload.image) {
+            if (payload.image instanceof File) {
+                formData.append("image", payload.image);
+            } else if (typeof payload.image === "string" && payload.image) {
                 formData.append("image", payload.image);
             }
             const response = await axiosInstance.put(`api/products/update/${id}`, formData)

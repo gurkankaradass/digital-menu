@@ -11,7 +11,7 @@ import { setLoading, setTables } from "../redux/appSlice"
 import OrderServices from "../services/OrderServices"
 import { toast } from "react-toastify"
 import { useFormik } from "formik"
-import { schemaTable } from "../schema/Schema"
+import { schemaTableAdd } from "../schema/Schema"
 import TableServices from "../services/TableServices"
 
 interface OrderTypeRes {
@@ -146,7 +146,7 @@ const OrdersPage = () => {
             table_number: ""
         },
         onSubmit: addNewTable,
-        validationSchema: schemaTable,
+        validationSchema: schemaTableAdd,
         enableReinitialize: true
     });
     const { values: values3, handleSubmit: handleSubmit3, handleChange: handleChange3, errors: errors3, resetForm: resetForm3 } = formik3;
@@ -195,8 +195,8 @@ const OrdersPage = () => {
                                     </div>
                                 </div>
                                 {
-                                    order && order.map((order) => (
-                                        <div className="flex w-full justify-between mb-1">
+                                    order && order.map((order, index) => (
+                                        <div key={`${order.product_name}-${index}`} className="flex w-full justify-between mb-1">
                                             <p>{order.product_name}</p>
                                             <div className="flex justify-evenly">
                                                 <p>x{order.quantity}</p>

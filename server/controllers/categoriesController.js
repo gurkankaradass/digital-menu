@@ -75,11 +75,11 @@ const deleteCategory = async (req, res) => {
 
     try {
         const pool = await poolPromise;
-        const chechCategory = await pool.request()
+        const checkCategory = await pool.request()
             .input("id", sql.Int, id)
             .query("SELECT id FROM Categories WHERE id = @id");
 
-        if (!chechCategory) {
+        if (checkCategory.recordset.length === 0) {
             return res.status(404).json({ message: "Kategori Bulunamadı..." });
         }
 

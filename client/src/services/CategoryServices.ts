@@ -13,7 +13,6 @@ class CategoryServices {
     }
 
     async addNewCategory(payload: CategoryType): Promise<any> {
-        console.log(payload)
         try {
             const formData = new FormData();
             formData.append("name", payload.name);
@@ -54,7 +53,9 @@ class CategoryServices {
         try {
             const formData = new FormData();
             formData.append("name", payload.name);
-            if (payload.image) {
+            if (payload.image instanceof File) {
+                formData.append("image", payload.image);
+            } else if (typeof payload.image === "string" && payload.image) {
                 formData.append("image", payload.image);
             }
             const response = await axiosInstance.put(`api/categories/update/${id}`, formData)

@@ -105,7 +105,7 @@ const deleteProduct = async (req, res) => {
             .input("id", sql.Int, id)
             .query("SELECT id FROM Products WHERE id = @id");
 
-        if (checkProduct.length === 0) {
+        if (checkProduct.recordset.length === 0) {
             return res.status(404).json({ message: "Ürün Bulunamadı..." });
         }
 
