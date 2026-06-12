@@ -14,7 +14,11 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, T
 
 
 interface PropsType {
-    category: CategoryType
+    category: CategoryType;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
+    disableUp?: boolean;
+    disableDown?: boolean;
 }
 
 const CategoryCard = (props: PropsType) => {
@@ -95,8 +99,8 @@ const CategoryCard = (props: PropsType) => {
         <div>
             {
                 currentEmployee && currentEmployee.role === "admin" && currentUrl === "/" ?
-                    <div className='px-[16px] flex flex-row text-white justify-between'>
-                        <Card onClick={() => { getProductByCategoryName(name) }} className="flex flex-col justify-between w-10/12 h-32 sm:h-56 mt-5 cursor-pointer relative border">
+                    <div className='px-[16px] flex flex-row text-white justify-between items-center mt-5'>
+                        <Card onClick={() => { getProductByCategoryName(name) }} className="flex flex-col justify-between w-9/12 h-32 sm:h-56 cursor-pointer relative border">
                             <div>
                                 <img src={image} alt={name} className="object-contain w-full h-full" />
                                 {
@@ -110,8 +114,26 @@ const CategoryCard = (props: PropsType) => {
                                 }
                             </div>
                         </Card >
-                        <button onClick={() => setOpenEdit(true)}>
-                            <EditIcon className='w-2/12 cursor-pointer' sx={{ fontSize: "35px" }} />
+                        <div className="w-2/12 flex flex-col justify-center items-center space-y-2">
+                            <button
+                                type="button"
+                                disabled={props.disableUp}
+                                onClick={(e) => { e.stopPropagation(); props.onMoveUp?.(); }}
+                                className="w-8 h-8 rounded-full bg-zinc-800 disabled:opacity-30 flex items-center justify-center text-white text-xs hover:bg-zinc-700 transition"
+                            >
+                                ▲
+                            </button>
+                            <button
+                                type="button"
+                                disabled={props.disableDown}
+                                onClick={(e) => { e.stopPropagation(); props.onMoveDown?.(); }}
+                                className="w-8 h-8 rounded-full bg-zinc-800 disabled:opacity-30 flex items-center justify-center text-white text-xs hover:bg-zinc-700 transition"
+                            >
+                                ▼
+                            </button>
+                        </div>
+                        <button className="w-1/12" onClick={() => setOpenEdit(true)}>
+                            <EditIcon className='cursor-pointer mx-auto' sx={{ fontSize: "35px" }} />
                         </button>
                         <div>
                             <Dialog

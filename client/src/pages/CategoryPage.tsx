@@ -30,6 +30,37 @@ const CategoryPage = () => {
     // Kategoriyi bulmak
     const category = categories.find((category: CategoryType) => category.name === categoryNameFromUrl);
 
+    const handleMoveProduct = async (index: number, direction: 'up' | 'down') => {
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= products.length) return;
+
+        const updatedProducts = [...products];
+        const temp = updatedProducts[index];
+        updatedProducts[index] = updatedProducts[targetIndex];
+        updatedProducts[targetIndex] = temp;
+
+        const reorderPayload = updatedProducts.map((prod, idx) => ({
+            id: prod.id!,
+            sort_order: idx
+        }));
+
+        try {
+            dispatch(setLoading(true));
+            if (category && category.id) {
+                const response = await ProductServices.reorderProducts(category.id, reorderPayload);
+                if (response && response.success) {
+                    dispatch(setProducts(response.newProducts));
+                    localStorage.setItem("categoryProducts", JSON.stringify(response.newProducts));
+                    toast.success(response.message || "Sıralama güncellendi.");
+                }
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Sıralama güncellenemedi.");
+        } finally {
+            dispatch(setLoading(false));
+        }
+    };
+
     const submit = async (values: any) => {
         try {
             dispatch(setLoading(true));
@@ -94,8 +125,15 @@ const CategoryPage = () => {
                     <CategoryCard key={category.id} category={category} />
                 }
                 {
-                    products && products.map((product: ProductType) => (
-                        <ProductCard key={product.id} product={product} />
+                    products && products.map((product: ProductType, index: number) => (
+                        <ProductCard 
+                            key={product.id} 
+                            product={product} 
+                            onMoveUp={() => handleMoveProduct(index, 'up')}
+                            onMoveDown={() => handleMoveProduct(index, 'down')}
+                            disableUp={index === 0}
+                            disableDown={index === products.length - 1}
+                        />
                     ))
                 }
                 {

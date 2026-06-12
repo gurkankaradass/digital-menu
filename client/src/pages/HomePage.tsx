@@ -20,6 +20,35 @@ const HomePage = () => {
 
     const [open, setOpen] = useState(false);
 
+    const handleMoveCategory = async (index: number, direction: 'up' | 'down') => {
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= categories.length) return;
+
+        const updatedCategories = [...categories];
+        const temp = updatedCategories[index];
+        updatedCategories[index] = updatedCategories[targetIndex];
+        updatedCategories[targetIndex] = temp;
+
+        const reorderPayload = updatedCategories.map((cat, idx) => ({
+            id: cat.id!,
+            sort_order: idx
+        }));
+
+        try {
+            dispatch(setLoading(true));
+            const response = await CategoryServices.reorderCategories(reorderPayload);
+            if (response && response.success) {
+                dispatch(setCategories(response.newCategories));
+                localStorage.setItem("category", JSON.stringify(response.newCategories));
+                toast.success(response.message || "Sıralama güncellendi.");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Sıralama güncellenemedi.");
+        } finally {
+            dispatch(setLoading(false));
+        }
+    };
+
     const submit = async (values: any) => {
         try {
             dispatch(setLoading(true));
@@ -67,8 +96,15 @@ const HomePage = () => {
             <Navbar />
             <Container maxWidth="sm">
                 {
-                    categories && categories.map((category: CategoryType) => (
-                        <CategoryCard key={category.id} category={category} />
+                    categories && categories.map((category: CategoryType, index: number) => (
+                        <CategoryCard 
+                            key={category.id} 
+                            category={category} 
+                            onMoveUp={() => handleMoveCategory(index, 'up')}
+                            onMoveDown={() => handleMoveCategory(index, 'down')}
+                            disableUp={index === 0}
+                            disableDown={index === categories.length - 1}
+                        />
                     ))
                 }
                 {

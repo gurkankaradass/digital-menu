@@ -17,7 +17,11 @@ import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import OrderServices from "../services/OrderServices";
 
 interface PropsType {
-    product: ProductType
+    product: ProductType;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
+    disableUp?: boolean;
+    disableDown?: boolean;
 }
 
 const ProductCard = (props: PropsType) => {
@@ -158,9 +162,25 @@ const ProductCard = (props: PropsType) => {
                 <div className="justify-start items-start h-full pt-2">
                     {
                         currentEmployee?.role === "admin" ?
-                            <div>
+                            <div className="flex flex-col items-center space-y-2">
+                                <button
+                                    type="button"
+                                    disabled={props.disableUp}
+                                    onClick={(e) => { e.stopPropagation(); props.onMoveUp?.(); }}
+                                    className="w-6 h-6 rounded-full bg-zinc-800 disabled:opacity-30 flex items-center justify-center text-white text-xs hover:bg-zinc-700 transition"
+                                >
+                                    ▲
+                                </button>
                                 <button onClick={() => { setOpenEdit(true) }}>
                                     <EditIcon className="cursor-pointer" />
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={props.disableDown}
+                                    onClick={(e) => { e.stopPropagation(); props.onMoveDown?.(); }}
+                                    className="w-6 h-6 rounded-full bg-zinc-800 disabled:opacity-30 flex items-center justify-center text-white text-xs hover:bg-zinc-700 transition"
+                                >
+                                    ▼
                                 </button>
                             </div> :
                             currentEmployee?.role === "waiter" ?

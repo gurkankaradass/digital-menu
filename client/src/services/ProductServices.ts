@@ -71,6 +71,19 @@ class ProductServices {
             throw error.response?.data?.message || "Ürün Güncellenemedi..."
         }
     }
+    async reorderProducts(category_id: number, products: { id: number; sort_order: number }[]): Promise<any> {
+        try {
+            const response = await axiosInstance.put("api/products/reorder", { category_id, products });
+            return {
+                success: true,
+                message: response.data.message,
+                newProducts: response.data.newProducts
+            }
+        } catch (error: any) {
+            console.error("Ürün Sıralanamadı...", error);
+            throw error.response?.data?.message || "Ürün Sıralanamadı...";
+        }
+    }
 }
 
 export default new ProductServices

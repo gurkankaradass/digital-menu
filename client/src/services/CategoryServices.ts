@@ -69,6 +69,19 @@ class CategoryServices {
             throw error.response?.data?.message || "Kategori Güncellenemedi...";
         }
     }
+    async reorderCategories(categories: { id: number; sort_order: number }[]): Promise<any> {
+        try {
+            const response = await axiosInstance.put("api/categories/reorder", { categories });
+            return {
+                success: true,
+                message: response.data.message,
+                newCategories: response.data.newCategories
+            }
+        } catch (error: any) {
+            console.error("Kategori Sıralanamadı: ", error);
+            throw error.response?.data?.message || "Kategori Sıralanamadı...";
+        }
+    }
 }
 
 export default new CategoryServices

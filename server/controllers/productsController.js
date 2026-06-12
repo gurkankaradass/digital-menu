@@ -15,7 +15,7 @@ const getProductByCategoryName = async (req, res) => {
 
     try {
         const result = await pool.query(
-            'SELECT p.id, p.name, p.image, p.price, c.name AS "categoryName" FROM "Products" p JOIN "Categories" c ON p.category_id = c.id WHERE c.name = $1',
+            'SELECT p.id, p.name, p.image, p.price, c.name AS "categoryName" FROM "Products" p JOIN "Categories" c ON p.category_id = c.id WHERE c.name = $1 ORDER BY p.sort_order ASC, p.id ASC',
             [categoryName]
         );
 
@@ -75,7 +75,7 @@ const addNewProduct = async (req, res) => {
         );
 
         const newProducts = await pool.query(
-            'SELECT * FROM "Products" WHERE category_id = $1',
+            'SELECT * FROM "Products" WHERE category_id = $1 ORDER BY sort_order ASC, id ASC',
             [categoryId]
         );
 
@@ -153,9 +153,45 @@ const updateProduct = async (req, res) => {
     }
 }
 
+const reorderProducts = async (req, res) => {
+    const { products, category_id } = req.body; // Array of { id, sort_order }
+
+    if (!Array.isArray(products) || !category_id) {
+        return res.status(400).json({ message: "Geçersiz sıralama verisi..." });
+    }
+
+    try {
+        for (const prod of products) {
+            await pool.query(
+                'UPDATE "Products" SET sort_order = $1 WHERE id = $2',
+                [prod.sort_order, prod.id]
+            );
+        }
+
+        const newProducts = await pool.query(
+            'SELECT * FROM "Products" WHERE category_id = $1 ORDER BY sort_order ASC, id ASC',
+            [category_id]
+        );
+
+        const mappedProducts = newProducts.rows.map(product => ({
+            ...product,
+            image: getImageUrl(req, product.image)
+        }));
+
+        res.status(200).json({
+            message: "Ürün sıralaması güncellendi...",
+            newProducts: mappedProducts
+        });
+    } catch (error) {
+        console.error("Ürün Sıralama Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" });
+    }
+};
+
 module.exports = {
     getProductByCategoryName,
     addNewProduct,
     deleteProduct,
-    updateProduct
+    updateProduct,
+    reorderProducts
 }

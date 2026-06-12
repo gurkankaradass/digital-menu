@@ -8,7 +8,7 @@ const getImageUrl = (req, path) => {
 
 const getAllCategories = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM "Categories"');
+        const result = await pool.query('SELECT * FROM "Categories" ORDER BY sort_order ASC, id ASC');
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Kategori Bulunamadı..." });
@@ -49,7 +49,7 @@ const addNewCategory = async (req, res) => {
             [name, imagePath]
         );
 
-        const newCategories = await pool.query('SELECT * FROM "Categories"');
+        const newCategories = await pool.query('SELECT * FROM "Categories" ORDER BY sort_order ASC, id ASC');
 
         const mappedCategories = newCategories.rows.map(cat => ({
             ...cat,
@@ -85,7 +85,7 @@ const deleteCategory = async (req, res) => {
             [id]
         );
 
-        const newCategories = await pool.query('SELECT * FROM "Categories"');
+        const newCategories = await pool.query('SELECT * FROM "Categories" ORDER BY sort_order ASC, id ASC');
 
         const mappedCategories = newCategories.rows.map(cat => ({
             ...cat,
@@ -122,7 +122,7 @@ const updateCategory = async (req, res) => {
             [name, imagePath, id]
         );
 
-        const newCategories = await pool.query('SELECT * FROM "Categories"');
+        const newCategories = await pool.query('SELECT * FROM "Categories" ORDER BY sort_order ASC, id ASC');
 
         const mappedCategories = newCategories.rows.map(cat => ({
             ...cat,
@@ -140,9 +140,42 @@ const updateCategory = async (req, res) => {
     }
 }
 
+const reorderCategories = async (req, res) => {
+    const { categories } = req.body; // Array of { id, sort_order }
+
+    if (!Array.isArray(categories)) {
+        return res.status(400).json({ message: "Geçersiz sıralama verisi..." });
+    }
+
+    try {
+        for (const cat of categories) {
+            await pool.query(
+                'UPDATE "Categories" SET sort_order = $1 WHERE id = $2',
+                [cat.sort_order, cat.id]
+            );
+        }
+
+        const newCategories = await pool.query('SELECT * FROM "Categories" ORDER BY sort_order ASC, id ASC');
+
+        const mappedCategories = newCategories.rows.map(cat => ({
+            ...cat,
+            image: getImageUrl(req, cat.image)
+        }));
+
+        res.status(200).json({
+            message: "Kategori sıralaması güncellendi...",
+            newCategories: mappedCategories
+        });
+    } catch (error) {
+        console.error("Kategori Sıralama Hatası: ", error);
+        res.status(500).json({ message: "Sunucu Hatası" });
+    }
+};
+
 module.exports = {
     getAllCategories,
     addNewCategory,
     deleteCategory,
-    updateCategory
+    updateCategory,
+    reorderCategories
 }
