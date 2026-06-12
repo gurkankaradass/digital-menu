@@ -8,7 +8,7 @@ const getImageUrl = (req, path) => {
 
 const getCafeInfo = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM Cafe_Info WHERE id = 1');
+        const result = await pool.query('SELECT * FROM "Cafe_Info" WHERE id = 1');
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Cafe Bilgilerine Ulaşılamadı..." });
@@ -36,7 +36,7 @@ const updateCafeInfo = async (req, res) => {
 
     try {
         await pool.query(
-            `UPDATE Cafe_Info 
+            `UPDATE "Cafe_Info" 
             SET 
                 name = $1,
                 logo = $2,
@@ -51,7 +51,7 @@ const updateCafeInfo = async (req, res) => {
 
         // Güncellenen bilgileri veritabanından al
         const updatedCafeInfo = await pool.query(
-            `SELECT * FROM Cafe_Info WHERE id = $1`,
+            `SELECT * FROM "Cafe_Info" WHERE id = $1`,
             [id]
         );
 

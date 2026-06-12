@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 
 const getAllEmployees = async (req, res) => {
     try {
-        const result = await pool.query("SELECT id, username, role FROM Employees");
+        const result = await pool.query('SELECT id, username, role FROM "Employees"');
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Personel Bulunamadı..." });
@@ -21,7 +21,7 @@ const login = async (req, res) => {
 
     try {
         const result = await pool.query(
-            "SELECT * FROM Employees WHERE username = $1",
+            'SELECT * FROM "Employees" WHERE username = $1',
             [username]
         );
 
@@ -66,7 +66,7 @@ const addNewEmployee = async (req, res) => {
 
     try {
         const checkEmployee = await pool.query(
-            "SELECT id FROM Employees WHERE username = $1",
+            'SELECT id FROM "Employees" WHERE username = $1',
             [username]
         );
 
@@ -77,11 +77,11 @@ const addNewEmployee = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         await pool.query(
-            `INSERT INTO Employees (username, password, role) VALUES ($1, $2, $3)`,
+            'INSERT INTO "Employees" (username, password, role) VALUES ($1, $2, $3)',
             [username, hashedPassword, role]
         );
 
-        const newEmployees = await pool.query("SELECT id, username, role FROM Employees");
+        const newEmployees = await pool.query('SELECT id, username, role FROM "Employees"');
 
         res.status(200).json({
             message: "Personel Eklendi...",
@@ -99,7 +99,7 @@ const deleteEmployee = async (req, res) => {
 
     try {
         const checkEmployee = await pool.query(
-            "SELECT id FROM Employees WHERE id = $1",
+            'SELECT id FROM "Employees" WHERE id = $1',
             [id]
         );
 
@@ -108,11 +108,11 @@ const deleteEmployee = async (req, res) => {
         }
 
         await pool.query(
-            "DELETE FROM Employees WHERE id = $1",
+            'DELETE FROM "Employees" WHERE id = $1',
             [id]
         );
 
-        const newEmployees = await pool.query("SELECT * FROM Employees");
+        const newEmployees = await pool.query('SELECT * FROM "Employees"');
 
         res.status(200).json({
             message: "Personel Başarıyla Silindi...",

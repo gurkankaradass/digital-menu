@@ -8,7 +8,7 @@ const getImageUrl = (req, path) => {
 
 const getAllCategories = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM Categories');
+        const result = await pool.query('SELECT * FROM "Categories"');
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Kategori Bulunamadı..." });
@@ -36,7 +36,7 @@ const addNewCategory = async (req, res) => {
 
     try {
         const checkCategory = await pool.query(
-            "SELECT id FROM Categories WHERE name = $1",
+            'SELECT id FROM "Categories" WHERE name = $1',
             [name]
         );
 
@@ -45,11 +45,11 @@ const addNewCategory = async (req, res) => {
         }
 
         await pool.query(
-            "INSERT INTO Categories (name, image) VALUES ($1, $2)",
+            'INSERT INTO "Categories" (name, image) VALUES ($1, $2)',
             [name, imagePath]
         );
 
-        const newCategories = await pool.query("SELECT * FROM Categories");
+        const newCategories = await pool.query('SELECT * FROM "Categories"');
 
         const mappedCategories = newCategories.rows.map(cat => ({
             ...cat,
@@ -72,7 +72,7 @@ const deleteCategory = async (req, res) => {
 
     try {
         const checkCategory = await pool.query(
-            "SELECT id FROM Categories WHERE id = $1",
+            'SELECT id FROM "Categories" WHERE id = $1',
             [id]
         );
 
@@ -81,11 +81,11 @@ const deleteCategory = async (req, res) => {
         }
 
         await pool.query(
-            "DELETE FROM Categories WHERE id = $1",
+            'DELETE FROM "Categories" WHERE id = $1',
             [id]
         );
 
-        const newCategories = await pool.query("SELECT * FROM Categories");
+        const newCategories = await pool.query('SELECT * FROM "Categories"');
 
         const mappedCategories = newCategories.rows.map(cat => ({
             ...cat,
@@ -114,7 +114,7 @@ const updateCategory = async (req, res) => {
 
     try {
         await pool.query(
-            `UPDATE Categories
+            `UPDATE "Categories"
             SET
                 name = $1,
                 image = $2
@@ -122,7 +122,7 @@ const updateCategory = async (req, res) => {
             [name, imagePath, id]
         );
 
-        const newCategories = await pool.query("SELECT * FROM Categories");
+        const newCategories = await pool.query('SELECT * FROM "Categories"');
 
         const mappedCategories = newCategories.rows.map(cat => ({
             ...cat,
