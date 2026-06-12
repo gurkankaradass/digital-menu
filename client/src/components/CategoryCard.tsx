@@ -100,7 +100,7 @@ const CategoryCard = (props: PropsType) => {
             {
                 currentEmployee && currentEmployee.role === "admin" && currentUrl === "/" ?
                     <div className='px-[16px] flex flex-row text-white justify-between items-center mt-5'>
-                        <Card onClick={() => { getProductByCategoryName(name) }} className="flex flex-col justify-between w-9/12 h-32 sm:h-56 cursor-pointer relative border">
+                        <Card onClick={() => { getProductByCategoryName(name) }} className="flex flex-col justify-between w-10/12 h-32 sm:h-56 cursor-pointer relative border">
                             <div>
                                 <img src={image} alt={name} className="object-contain w-full h-full" />
                                 {
@@ -123,6 +123,9 @@ const CategoryCard = (props: PropsType) => {
                             >
                                 ▲
                             </button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); setOpenEdit(true); }}>
+                                <EditIcon className='cursor-pointer mx-auto' sx={{ fontSize: "35px" }} />
+                            </button>
                             <button
                                 type="button"
                                 disabled={props.disableDown}
@@ -132,9 +135,6 @@ const CategoryCard = (props: PropsType) => {
                                 ▼
                             </button>
                         </div>
-                        <button className="w-1/12" onClick={() => setOpenEdit(true)}>
-                            <EditIcon className='cursor-pointer mx-auto' sx={{ fontSize: "35px" }} />
-                        </button>
                         <div>
                             <Dialog
                                 open={openEdit}
