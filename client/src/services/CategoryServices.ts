@@ -15,7 +15,12 @@ class CategoryServices {
     async addNewCategory(payload: CategoryType): Promise<any> {
         console.log(payload)
         try {
-            const response: AxiosResponse<any> = await axiosInstance.post("api/categories/addNewCategory", payload);
+            const formData = new FormData();
+            formData.append("name", payload.name);
+            if (payload.image) {
+                formData.append("image", payload.image);
+            }
+            const response: AxiosResponse<any> = await axiosInstance.post("api/categories/addNewCategory", formData);
             if (response.status === 200) {
                 return {
                     success: true,
@@ -47,7 +52,12 @@ class CategoryServices {
 
     async updateCategory(id: number, payload: CategoryType): Promise<any> {
         try {
-            const response = await axiosInstance.put(`api/categories/update/${id}`, payload)
+            const formData = new FormData();
+            formData.append("name", payload.name);
+            if (payload.image) {
+                formData.append("image", payload.image);
+            }
+            const response = await axiosInstance.put(`api/categories/update/${id}`, formData)
             return {
                 success: true,
                 message: response.data.message,

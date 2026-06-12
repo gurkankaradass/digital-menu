@@ -1,5 +1,11 @@
 const { sql, poolPromise } = require("../config/db");
 
+const getImageUrl = (req, path) => {
+    if (!path) return path;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return `${req.protocol}://${req.get('host')}/${path}`;
+};
+
 const getCafeInfo = async (req, res) => {
     try {
         const pool = await poolPromise;
@@ -9,7 +15,10 @@ const getCafeInfo = async (req, res) => {
             return res.status(404).json({ message: "Cafe Bilgilerine Ulaşılamadı..." });
         }
 
-        res.json(result.recordset[0]);
+        const cafe = result.recordset[0];
+        cafe.logo = getImageUrl(req, cafe.logo);
+
+        res.json(cafe);
 
     } catch (error) {
         console.error("API Hatası: ", error);
@@ -19,9 +28,10 @@ const getCafeInfo = async (req, res) => {
 
 const updateCafeInfo = async (req, res) => {
     const { id } = req.params;
-    const { name, logo, phone, location, address, map, instagram } = req.body;
+    const { name, phone, location, address, map, instagram } = req.body;
+    const logoPath = req.file ? `uploads/${req.file.filename}` : req.body.logo;
 
-    if (!name || !logo || !phone || !location || !address || !map || !instagram) {
+    if (!name || !logoPath || !phone || !location || !address || !map || !instagram) {
         return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
     }
 
@@ -31,7 +41,7 @@ const updateCafeInfo = async (req, res) => {
         await pool.request()
             .input("id", sql.Int, id)
             .input("name", sql.NVarChar, name)
-            .input("logo", sql.NVarChar, logo)
+            .input("logo", sql.NVarChar, logoPath)
             .input("phone", sql.NVarChar, phone)
             .input("location", sql.NVarChar, location)
             .input("address", sql.NVarChar, address)
@@ -53,10 +63,13 @@ const updateCafeInfo = async (req, res) => {
             .input("id", sql.Int, id)
             .query(`SELECT * FROM Cafe_Info WHERE id = @id`);
 
+        const cafe = updatedCafeInfo.recordset[0];
+        cafe.logo = getImageUrl(req, cafe.logo);
+
         // Güncellenen veriyi döndür
         res.status(200).json({
             message: "Cafe Bilgileri Güncellendi...",
-            updatedCafeInfo: updatedCafeInfo.recordset[0]  // Güncellenen veriyi dönüyoruz
+            updatedCafeInfo: cafe  // Güncellenen veriyi dönüyoruz
         });
 
     } catch (error) {

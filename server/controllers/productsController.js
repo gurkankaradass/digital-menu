@@ -1,5 +1,11 @@
 const { sql, poolPromise } = require("../config/db");
 
+const getImageUrl = (req, path) => {
+    if (!path) return path;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return `${req.protocol}://${req.get('host')}/${path}`;
+};
+
 const getProductByCategoryName = async (req, res) => {
     const categoryName = req.params.categoryName;
 
@@ -13,8 +19,12 @@ const getProductByCategoryName = async (req, res) => {
             .input('categoryName', sql.NVarChar, categoryName)
             .query('SELECT p.id, p.name, p.image, p.price, c.name AS categoryName FROM Products p JOIN Categories c ON p.category_id = c.id WHERE c.name = @categoryName');
 
-        res.json(result.recordset);
+        const products = result.recordset.map(product => ({
+            ...product,
+            image: getImageUrl(req, product.image)
+        }));
 
+        res.json(products);
 
     } catch (error) {
         console.error("API Hatası: ", error);
@@ -23,9 +33,10 @@ const getProductByCategoryName = async (req, res) => {
 }
 
 const addNewProduct = async (req, res) => {
-    const { name, categoryName, image, price } = req.body
+    const { name, categoryName, price } = req.body;
+    const imagePath = req.file ? `uploads/${req.file.filename}` : req.body.image;
 
-    if (!name || !categoryName || !image || !price) {
+    if (!name || !categoryName || !imagePath || !price) {
         return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
     }
 
@@ -61,7 +72,7 @@ const addNewProduct = async (req, res) => {
         await pool.request()
             .input("name", sql.NVarChar, name)
             .input("categoryId", sql.Int, categoryId)
-            .input("image", sql.NVarChar, image)
+            .input("image", sql.NVarChar, imagePath)
             .input("price", sql.Decimal(10, 2), formattedPrice)
             .query(`INSERT INTO Products (name, category_id, image, price) VALUES (@name, @categoryId, @image, @price)`)
 
@@ -69,9 +80,14 @@ const addNewProduct = async (req, res) => {
             .input("categoryId", sql.Int, categoryId)
             .query("SELECT * FROM Products WHERE category_id = @categoryId");
 
+        const mappedProducts = newProducts.recordset.map(product => ({
+            ...product,
+            image: getImageUrl(req, product.image)
+        }));
+
         res.status(200).json({
             message: "Yeni Ürün Oluşturuldu...",
-            newProducts: newProducts.recordset
+            newProducts: mappedProducts
         })
 
     } catch (error) {
@@ -84,7 +100,6 @@ const deleteProduct = async (req, res) => {
     const { id } = req.params;
 
     try {
-
         const pool = await poolPromise;
         const checkProduct = await pool.request()
             .input("id", sql.Int, id)
@@ -107,9 +122,10 @@ const deleteProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     const { id } = req.params;
-    const { name, image, price, categoryName } = req.body;
+    const { name, price, categoryName } = req.body;
+    const imagePath = req.file ? `uploads/${req.file.filename}` : req.body.image;
 
-    if (!name || !image || !price || !categoryName) {
+    if (!name || !imagePath || !price || !categoryName) {
         return res.status(400).json({ message: "Gerekli Alanlar Doldurulmalıdır..." })
     }
 
@@ -127,7 +143,7 @@ const updateProduct = async (req, res) => {
         await pool.request()
             .input("id", sql.Int, id)
             .input("name", sql.NVarChar, name)
-            .input("image", sql.NVarChar, image)
+            .input("image", sql.NVarChar, imagePath)
             .input("price", sql.Decimal(10, 2), formattedPrice)
             .input("categoryName", sql.NVarChar, categoryName)
             .query(`UPDATE Products 

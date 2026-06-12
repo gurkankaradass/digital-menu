@@ -1,7 +1,7 @@
 export interface CafeInfoType {
     id?: number,
     name: string,
-    logo: string,
+    logo: any,
     phone: string,
     location: string,
     address: string,
@@ -19,13 +19,13 @@ export interface EmployeeType {
 export interface CategoryType {
     id?: number,
     name: string,
-    image: string
+    image: any
 }
 
 export interface ProductType {
     id?: number,
     name: string,
-    image: string,
+    image: any,
     price: number,
     categoryName: string
 }

@@ -94,7 +94,7 @@ const OrdersPage = () => {
         }
     }
 
-    const addNewTable = async (values3: any, action: any) => {
+    const addNewTable = async (values3: any) => {
         try {
             dispatch(setLoading(true));
             const payload: TableType = {

@@ -24,7 +24,7 @@ const Navbar = () => {
                 <div>
                     {
                         currentUrl === "/" ?
-                            <img className='size-36' src={`/${cafeInfo?.logo}`} alt="Cafe Logo" /> :
+                            <img className='size-36' src={cafeInfo?.logo?.startsWith("http") ? cafeInfo.logo : `/${cafeInfo?.logo}`} alt="Cafe Logo" /> :
                             <p className='text-white text-2xl font-[arial]'>{cafeInfo?.name} - Menu</p>
                     }
                 </div>

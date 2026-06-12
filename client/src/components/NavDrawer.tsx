@@ -9,22 +9,20 @@ import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { FaLock } from "react-icons/fa";
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import PersonIcon from '@mui/icons-material/Person';
 import { useFormik } from 'formik';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormHelperText, FormLabel, Radio, RadioGroup } from "@mui/material";
-import { schemaAddNewEmployee, schemaEditCafe, schemaLogin, schemaTable } from '../schema/Schema'
-import { CafeInfoType, EmployeeType, TableType } from '../types/Types'
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormHelperText, FormLabel, Radio, RadioGroup, FormControl } from "@mui/material";
+import { schemaAddNewEmployee, schemaEditCafe, schemaLogin } from '../schema/Schema'
+import { CafeInfoType, EmployeeType } from '../types/Types'
 import { toast } from 'react-toastify'
 import EmployeeServices from '../services/EmployeeServices'
 import { useNavigate } from 'react-router-dom'
 import EditIcon from '@mui/icons-material/Edit';
 import CafeServices from '../services/CafeServices'
-import { FormControl } from '@mui/material'
-import TableServices from '../services/TableServices'
 import useTable from '../hooks/useTable'
 
 interface CheckEmployeeType {
@@ -34,7 +32,7 @@ interface CheckEmployeeType {
 
 const NavDrawer = () => {
 
-    const { drawer, currentEmployee, employees, tables } = useSelector((state: RootState) => state.app)
+    const { drawer, currentEmployee, employees } = useSelector((state: RootState) => state.app)
     const cafeInfo = useCafe();
     const table = useTable();
     const dispatch = useDispatch();
@@ -87,7 +85,7 @@ const NavDrawer = () => {
         }
     }
 
-    const submit = async (values: any, action: any) => {
+    const submit = async (values: any) => {
         try {
             dispatch(setLoading(true))
             const response: CheckEmployeeType = await EmployeeServices.getEmployee(values.username, values.password);
@@ -114,7 +112,7 @@ const NavDrawer = () => {
         }
     }
 
-    const submit1 = async (values: any, action: any) => {
+    const submit1 = async (values: any) => {
         try {
             dispatch(setLoading(true));
             const payload: CafeInfoType = {
@@ -145,7 +143,7 @@ const NavDrawer = () => {
         }
     };
 
-    const submit2 = async (values2: any, action: any) => {
+    const submit2 = async (values2: any) => {
         try {
             dispatch(setLoading(true));
             const payload: EmployeeType = {
@@ -195,7 +193,7 @@ const NavDrawer = () => {
         validationSchema: schemaEditCafe,
         enableReinitialize: true
     });
-    const { values: values1, handleSubmit: handleSubmit1, handleChange: handleChange1, errors: errors1, resetForm: resetForm1 } = formik1;
+    const { values: values1, handleSubmit: handleSubmit1, handleChange: handleChange1, setFieldValue: setFieldValue1, errors: errors1, resetForm: resetForm1 } = formik1;
 
     const formik2 = useFormik({
         initialValues: {
@@ -313,7 +311,7 @@ const NavDrawer = () => {
                     <div>
                         <div className='flex justify-between p-4'>
                             <div className='rounded-full bg-black size-20 flex justify-center items-center'>
-                                <img className='size-12' src={`/${cafeInfo?.logo}`} alt="Cafe Logo" />
+                                <img className='size-12' src={cafeInfo?.logo?.startsWith("http") ? cafeInfo.logo : `/${cafeInfo?.logo}`} alt="Cafe Logo" />
                             </div>
                             <div className='text-white flex flex-col justify-center ml-4'>
                                 <p className='font-bold text-md'>
@@ -361,14 +359,55 @@ const NavDrawer = () => {
                                                                 variant="standard"
                                                                 helperText={errors1.name && <span className='text-red-800'>{errors1.name}</span>}
                                                             />
+                                                            <div className="flex flex-col items-center justify-center border border-dashed border-gray-400 rounded-lg p-4 mb-2 relative hover:bg-gray-50 transition-colors">
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    id="cafe-logo-file-input"
+                                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                                    onChange={(event) => {
+                                                                        if (event.currentTarget.files && event.currentTarget.files[0]) {
+                                                                            setFieldValue1("logo", event.currentTarget.files[0]);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                {values1.logo ? (
+                                                                    <div className="text-center">
+                                                                        <img
+                                                                            src={typeof values1.logo === "string" ? (values1.logo.startsWith("http") || values1.logo.startsWith("blob") ? values1.logo : `/${values1.logo}`) : URL.createObjectURL(values1.logo)}
+                                                                            alt="Preview"
+                                                                            className="max-h-20 object-contain mb-1 mx-auto rounded"
+                                                                        />
+                                                                        <p className="text-[11px] text-green-700 font-semibold truncate max-w-48">
+                                                                            {typeof values1.logo === "string" ? "Mevcut Logo" : `Seçildi: ${values1.logo.name}`}
+                                                                        </p>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="text-[10px] text-red-500 underline mt-1"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setFieldValue1("logo", "");
+                                                                            }}
+                                                                        >
+                                                                            Kaldır
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="text-center text-gray-500">
+                                                                        <p className="text-xs font-semibold">Cihazdan Logo Seç</p>
+                                                                        <p className="text-[9px] text-gray-400">Tıklayın veya sürükleyin</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-[10px] text-gray-400 my-1">- VEYA -</p>
                                                             <TextField
                                                                 id="logo"
                                                                 label="Logo URL"
-                                                                value={values1.logo}
+                                                                value={typeof values1.logo === "string" ? values1.logo : ""}
                                                                 onChange={handleChange1}
                                                                 sx={{ marginBottom: "10px", width: "100%" }}
                                                                 variant="standard"
-                                                                helperText={errors1.logo && <span className='text-red-800'>{errors1.logo}</span>}
+                                                                helperText={errors1.logo && <span className='text-red-800'>{errors1.logo as string}</span>}
                                                             />
                                                             <TextField
                                                                 id="phone"

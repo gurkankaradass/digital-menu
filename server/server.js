@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+const fs = require("fs");
 const categoriesRoutes = require("./routes/categories");
 const productsRoutes = require("./routes/products");
 const cafeRoutes = require("./routes/cafe");
@@ -11,6 +13,13 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static uploaded files
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
+app.use("/uploads", express.static(uploadsDir));
 
 app.get("/", (req, res) => {
     res.send("Server Çalışıyor...");

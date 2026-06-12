@@ -14,7 +14,17 @@ class CafeServices {
 
     async updateCafeInfo(id: number, payload: CafeInfoType): Promise<any> {
         try {
-            const response = await axiosInstance.put(`api/cafe/update/${id}`, payload)
+            const formData = new FormData();
+            formData.append("name", payload.name);
+            formData.append("phone", payload.phone);
+            formData.append("location", payload.location);
+            formData.append("address", payload.address);
+            formData.append("map", payload.map);
+            formData.append("instagram", payload.instagram);
+            if (payload.logo) {
+                formData.append("logo", payload.logo);
+            }
+            const response = await axiosInstance.put(`api/cafe/update/${id}`, formData)
             return {
                 success: true,
                 message: response.data.message,

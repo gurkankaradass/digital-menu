@@ -14,7 +14,14 @@ class ProductServices {
 
     async addNewProduct(payload: ProductType): Promise<any> {
         try {
-            const response: AxiosResponse<any> = await axiosInstance.post("api/products/addNewProduct", payload);
+            const formData = new FormData();
+            formData.append("name", payload.name);
+            formData.append("categoryName", payload.categoryName);
+            formData.append("price", String(payload.price));
+            if (payload.image) {
+                formData.append("image", payload.image);
+            }
+            const response: AxiosResponse<any> = await axiosInstance.post("api/products/addNewProduct", formData);
             if (response.status === 200) {
                 return {
                     success: true,
@@ -45,7 +52,14 @@ class ProductServices {
 
     async updateProduct(id: number, payload: ProductType): Promise<any> {
         try {
-            const response = await axiosInstance.put(`api/products/update/${id}`, payload)
+            const formData = new FormData();
+            formData.append("name", payload.name);
+            formData.append("categoryName", payload.categoryName);
+            formData.append("price", String(payload.price));
+            if (payload.image) {
+                formData.append("image", payload.image);
+            }
+            const response = await axiosInstance.put(`api/products/update/${id}`, formData)
             return {
                 success: true,
                 message: response.data.message

@@ -13,14 +13,14 @@ export const schemaAddNewEmployee = yup.object().shape({
 
 export const schemaProduct = yup.object().shape({
     name: yup.string().required("Ürün Adı Boş Geçilemez..."),
-    image: yup.string().required("Fotoğraf Boş Geçilemez..."),
+    image: yup.mixed().required("Fotoğraf Boş Geçilemez..."),
     price: yup.string().required("Fiyat Boş Geçilemez..."),
     categoryName: yup.string().required("Kategori İsmi Boş Geçilemez...")
 })
 
 export const schemaEditCafe = yup.object().shape({
     name: yup.string().required("Cafe Adı Boş Geçilemez..."),
-    logo: yup.string().required("Logo Boş Geçilemez..."),
+    logo: yup.mixed().required("Logo Boş Geçilemez..."),
     phone: yup.string().required("Telefon Boş Geçilemez..."),
     location: yup.string().required("Mekan İsmi Boş Geçilemez..."),
     address: yup.string().required("Adres Boş Geçilemez..."),
@@ -30,7 +30,7 @@ export const schemaEditCafe = yup.object().shape({
 
 export const schemaCategory = yup.object().shape({
     name: yup.string().required("Kategori Adı Boş Geçilemez..."),
-    image: yup.string().required("Kategori Fotoğrafı Boş Geçilemez...")
+    image: yup.mixed().required("Kategori Fotoğrafı Boş Geçilemez...")
 })
 
 export const schemaTable = yup.object().shape({

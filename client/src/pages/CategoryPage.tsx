@@ -30,7 +30,7 @@ const CategoryPage = () => {
     // Kategoriyi bulmak
     const category = categories.find((category: CategoryType) => category.name === categoryNameFromUrl);
 
-    const submit = async (values: any, action: any) => {
+    const submit = async (values: any) => {
         try {
             dispatch(setLoading(true));
             const payload: ProductType = {
@@ -56,7 +56,7 @@ const CategoryPage = () => {
         }
     };
 
-    const { values, handleSubmit, handleChange, errors, resetForm } = useFormik({
+    const { values, handleSubmit, handleChange, setFieldValue, errors, resetForm } = useFormik({
         initialValues: {
             name: "",
             image: "",
@@ -141,10 +141,53 @@ const CategoryPage = () => {
                                                 {errors.categoryName && <span style={{ marginLeft: "-13px", marginTop: "-10px" }} className='text-red-800'>{errors.categoryName}</span>}
                                             </FormHelperText>
                                         </FormControl>
+
+                                        {/* Dosya Yükleme Alanı */}
+                                        <div className="flex flex-col items-center justify-center border border-dashed border-gray-400 rounded-lg p-4 mb-2 relative hover:bg-gray-50 transition-colors">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                id="product-file-input"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                onChange={(event) => {
+                                                    if (event.currentTarget.files && event.currentTarget.files[0]) {
+                                                        setFieldValue("image", event.currentTarget.files[0]);
+                                                    }
+                                                }}
+                                            />
+                                            {values.image && typeof values.image !== "string" ? (
+                                                <div className="text-center">
+                                                    <img
+                                                        src={URL.createObjectURL(values.image as any)}
+                                                        alt="Preview"
+                                                        className="max-h-20 object-contain mb-1 mx-auto rounded"
+                                                    />
+                                                    <p className="text-[11px] text-green-700 font-semibold truncate max-w-48">Seçildi: {(values.image as any).name}</p>
+                                                    <button
+                                                        type="button"
+                                                        className="text-[10px] text-red-500 underline mt-1"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setFieldValue("image", "");
+                                                        }}
+                                                    >
+                                                        Kaldır
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center text-gray-500">
+                                                    <p className="text-xs font-semibold">Cihazdan Dosya Seç</p>
+                                                    <p className="text-[9px] text-gray-400">Tıklayın veya sürükleyin</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <p className="text-[10px] text-gray-400 my-1">- VEYA -</p>
+
                                         <TextField
                                             id="image"
                                             label="Fotoğraf URL"
-                                            value={values.image}
+                                            value={typeof values.image === "string" ? values.image : ""}
                                             onChange={handleChange}
                                             sx={{ marginBottom: "10px", width: "100%" }}
                                             variant="standard"
