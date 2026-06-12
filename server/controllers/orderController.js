@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../config/db');
+const pool = require('../config/db');
 
 const getOrderByTableNumber = async (req, res) => {
     const table_number = parseInt(req.params.table_number);
@@ -8,31 +8,27 @@ const getOrderByTableNumber = async (req, res) => {
     }
 
     try {
-        let pool = await poolPromise;
-
-        let result = await pool
-            .request()
-            .input("table_number", sql.Int, table_number)
-            .query(`
+        let result = await pool.query(`
             SELECT 
-                Tables.table_number,
-                Products.name AS product_name,
-                Orders.quantity,
-                Orders.total_price,
-                Tables.bill
-            FROM Orders
-            JOIN Tables ON Orders.table_id = Tables.id
-            JOIN Products ON Orders.product_id = Products.id
-            WHERE Tables.table_number = @table_number
-            ORDER BY Orders.id DESC
-        `);
+                "Tables".table_number,
+                "Products".name AS product_name,
+                "Orders".quantity,
+                "Orders".total_price,
+                "Tables".bill
+            FROM "Orders"
+            JOIN "Tables" ON "Orders".table_id = "Tables".id
+            JOIN "Products" ON "Orders".product_id = "Products".id
+            WHERE "Tables".table_number = $1
+            ORDER BY "Orders".id DESC
+        `, [table_number]);
 
-        if (result.recordset.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ message: "Bu masa için sipariş bulunamadı." });
         }
 
-        res.status(200).json(result.recordset);
+        res.status(200).json(result.rows);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Sunucu hatası!" });
     }
 }
@@ -45,60 +41,49 @@ const orderProduct = async (req, res) => {
     }
 
     try {
-        let pool = await poolPromise;
+        let productQuery = await pool.query(
+            'SELECT price FROM "Products" WHERE id = $1',
+            [product_id]
+        );
 
-        let productQuery = await pool
-            .request()
-            .input("product_id", sql.Int, product_id)
-            .query("SELECT price FROM Products WHERE id = @product_id");
-
-        if (productQuery.recordset.length === 0) {
+        if (productQuery.rows.length === 0) {
             return res.status(404).json({ message: "Ürün bulunamadı!" });
         }
 
-        let price = productQuery.recordset[0].price;
+        let price = productQuery.rows[0].price;
         let additional_price = price * quantity;
 
-        let existingOrderQuery = await pool
-            .request()
-            .input("table_id", sql.Int, table_id)
-            .input("product_id", sql.Int, product_id)
-            .query("SELECT id, quantity, total_price FROM Orders WHERE table_id = @table_id AND product_id = @product_id");
+        let existingOrderQuery = await pool.query(
+            'SELECT id, quantity, total_price FROM "Orders" WHERE table_id = $1 AND product_id = $2',
+            [table_id, product_id]
+        );
 
-        if (existingOrderQuery.recordset.length > 0) {
-            let existingOrder = existingOrderQuery.recordset[0];
+        if (existingOrderQuery.rows.length > 0) {
+            let existingOrder = existingOrderQuery.rows[0];
             let newQuantity = existingOrder.quantity + quantity;
             let newTotalPrice = existingOrder.total_price + additional_price;
 
-            await pool
-                .request()
-                .input("order_id", sql.Int, existingOrder.id)
-                .input("newQuantity", sql.Int, newQuantity)
-                .input("newTotalPrice", sql.Decimal(10, 2), newTotalPrice)
-                .query("UPDATE Orders SET quantity = @newQuantity, total_price = @newTotalPrice WHERE id = @order_id");
+            await pool.query(
+                'UPDATE "Orders" SET quantity = $1, total_price = $2 WHERE id = $3',
+                [newQuantity, newTotalPrice, existingOrder.id]
+            );
 
         } else {
-            await pool
-                .request()
-                .input("table_id", sql.Int, table_id)
-                .input("product_id", sql.Int, product_id)
-                .input("quantity", sql.Int, quantity)
-                .input("total_price", sql.Decimal(10, 2), additional_price)
-                .query("INSERT INTO Orders (table_id, product_id, quantity, total_price) VALUES (@table_id, @product_id, @quantity, @total_price)");
+            await pool.query(
+                'INSERT INTO "Orders" (table_id, product_id, quantity, total_price) VALUES ($1, $2, $3, $4)',
+                [table_id, product_id, quantity, additional_price]
+            );
         }
 
-        await pool
-            .request()
-            .input("table_id", sql.Int, table_id)
-            .query(`
-          UPDATE Tables 
+        await pool.query(`
+          UPDATE "Tables" 
           SET bill = (
               SELECT COALESCE(SUM(total_price), 0) 
-              FROM Orders 
-              WHERE Orders.table_id = Tables.id
+              FROM "Orders" 
+              WHERE "Orders".table_id = "Tables".id
           ) 
-          WHERE id = @table_id
-      `);
+          WHERE id = $1
+        `, [table_id]);
 
         res.status(200).json({ message: "Sipariş başarıyla eklendi" });
     } catch (error) {
@@ -115,35 +100,34 @@ const deleteOrder = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
-        const checkOrder = await pool.request()
-            .input("table_number", sql.Int, table_number)
-            .input("product_name", sql.NVarChar, product_name)
-            .query("SELECT o.id, t.id AS table_id FROM Orders o JOIN Products p ON o.product_id = p.id JOIN Tables t ON o.table_id = t.id WHERE p.name = @product_name AND t.table_number = @table_number");
+        const checkOrder = await pool.query(
+            `SELECT o.id, t.id AS table_id 
+             FROM "Orders" o 
+             JOIN "Products" p ON o.product_id = p.id 
+             JOIN "Tables" t ON o.table_id = t.id 
+             WHERE p.name = $1 AND t.table_number = $2`,
+            [product_name, table_number]
+        );
 
-        if (checkOrder.recordset.length === 0) {
+        if (checkOrder.rows.length === 0) {
             return res.status(404).json({ message: "Ürün Bulunamadı..." });
         }
 
-        const orderId = checkOrder.recordset[0].id;
-        const tableId = checkOrder.recordset[0].table_id;
+        const orderId = checkOrder.rows[0].id;
+        const tableId = checkOrder.rows[0].table_id;
 
-        await pool.request()
-            .input("orderId", sql.Int, orderId)
-            .query("DELETE FROM Orders WHERE id = @orderId");
+        await pool.query('DELETE FROM "Orders" WHERE id = $1', [orderId]);
 
         // Masa toplamını güncelle
-        await pool.request()
-            .input("tableId", sql.Int, tableId)
-            .query(`
-                UPDATE Tables 
-                SET bill = (
-                    SELECT COALESCE(SUM(total_price), 0) 
-                    FROM Orders 
-                    WHERE Orders.table_id = Tables.id
-                ) 
-                WHERE id = @tableId
-            `);
+        await pool.query(`
+            UPDATE "Tables" 
+            SET bill = (
+                SELECT COALESCE(SUM(total_price), 0) 
+                FROM "Orders" 
+                WHERE "Orders".table_id = "Tables".id
+            ) 
+            WHERE id = $1
+        `, [tableId]);
 
         res.status(200).json({ message: "Ürün Başarıyla Silindi" });
     } catch (error) {
@@ -160,21 +144,18 @@ const deleteAllOrder = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
+        const tableResult = await pool.query(
+            'SELECT id FROM "Tables" WHERE table_number = $1',
+            [table_number]
+        );
 
-        const tableResult = await pool.request()
-            .input("table_number", sql.Int, table_number)
-            .query("SELECT id FROM Tables WHERE table_number = @table_number");
-
-        if (tableResult.recordset.length === 0) {
+        if (tableResult.rows.length === 0) {
             return res.status(404).json({ message: "Masa bulunamadı!" });
         }
 
-        const tableId = tableResult.recordset[0].id;
+        const tableId = tableResult.rows[0].id;
 
-        await pool.request()
-            .input("tableId", sql.Int, tableId)
-            .query("DELETE FROM Orders WHERE table_id = @tableId");
+        await pool.query('DELETE FROM "Orders" WHERE table_id = $1', [tableId]);
 
         res.status(200).json({ message: "Hesap Alındı..." });
     } catch (error) {
@@ -182,7 +163,6 @@ const deleteAllOrder = async (req, res) => {
         res.status(500).json({ message: "Sunucu hatası" });
     }
 }
-
 
 module.exports = {
     getOrderByTableNumber,

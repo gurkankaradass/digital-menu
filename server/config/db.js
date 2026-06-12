@@ -1,30 +1,21 @@
-const sql = require("mssql");
+const { Pool } = require("pg");
 require("dotenv").config();
 
-const config = {
-    server: process.env.DB_SERVER,
+const pool = new Pool({
+    host: process.env.DB_SERVER || "localhost",
+    port: parseInt(process.env.DB_PORT || "5432"),
     database: process.env.DB_DATABASE,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    options: {
-        encrypt: true,
-        trustServerCertificate: true
+});
+
+pool.connect((err, client, release) => {
+    if (err) {
+        console.error("Veritabanı bağlantı hatası:", err.stack);
+    } else {
+        console.log("PostgreSQL Bağlantısı Başarılı...");
+        release();
     }
-}
+});
 
-const poolPromise = new sql.ConnectionPool(config)
-    .connect()
-    .then(pool => {
-        console.log("SQL Bağlantısı Başarılı...");
-        return pool;
-    })
-    .catch(err => {
-        console.log("Bağlantı Hatası: ", err);
-        process.exit(1);
-    })
-
-
-module.exports = {
-    sql,
-    poolPromise
-}
+module.exports = pool;

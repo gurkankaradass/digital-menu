@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('../config/db');
+const pool = require('../config/db');
 
 const getImageUrl = (req, path) => {
     if (!path) return path;
@@ -8,14 +8,13 @@ const getImageUrl = (req, path) => {
 
 const getAllCategories = async (req, res) => {
     try {
-        const pool = await poolPromise;
-        const result = await pool.request().query('SELECT * FROM Categories');
+        const result = await pool.query('SELECT * FROM Categories');
 
-        if (result.recordset.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ message: "Kategori Bulunamadı..." });
         }
 
-        const categories = result.recordset.map(cat => ({
+        const categories = result.rows.map(cat => ({
             ...cat,
             image: getImageUrl(req, cat.image)
         }));
@@ -36,25 +35,23 @@ const addNewCategory = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
+        const checkCategory = await pool.query(
+            "SELECT id FROM Categories WHERE name = $1",
+            [name]
+        );
 
-        const checkCategory = await pool.request()
-            .input("name", sql.NVarChar, name)
-            .query("SELECT id FROM Categories WHERE name = @name");
-
-        if (checkCategory.recordset.length > 0) {
-            return res.status(400).json({ message: "Kategori Zaten Mevcut" });;
+        if (checkCategory.rows.length > 0) {
+            return res.status(400).json({ message: "Kategori Zaten Mevcut" });
         }
 
-        await pool.request()
-            .input("name", sql.NVarChar, name)
-            .input("image", sql.NVarChar, imagePath)
-            .query("INSERT INTO Categories (name, image) VALUES (@name, @image)")
+        await pool.query(
+            "INSERT INTO Categories (name, image) VALUES ($1, $2)",
+            [name, imagePath]
+        );
 
-        const newCategories = await pool.request()
-            .query("SELECT * FROM Categories");
+        const newCategories = await pool.query("SELECT * FROM Categories");
 
-        const mappedCategories = newCategories.recordset.map(cat => ({
+        const mappedCategories = newCategories.rows.map(cat => ({
             ...cat,
             image: getImageUrl(req, cat.image)
         }));
@@ -74,23 +71,23 @@ const deleteCategory = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const pool = await poolPromise;
-        const checkCategory = await pool.request()
-            .input("id", sql.Int, id)
-            .query("SELECT id FROM Categories WHERE id = @id");
+        const checkCategory = await pool.query(
+            "SELECT id FROM Categories WHERE id = $1",
+            [id]
+        );
 
-        if (checkCategory.recordset.length === 0) {
+        if (checkCategory.rows.length === 0) {
             return res.status(404).json({ message: "Kategori Bulunamadı..." });
         }
 
-        await pool.request()
-            .input("id", sql.Int, id)
-            .query("DELETE FROM Categories WHERE id = @id");
+        await pool.query(
+            "DELETE FROM Categories WHERE id = $1",
+            [id]
+        );
 
-        const newCategories = await pool.request()
-            .query("SELECT * FROM Categories");
+        const newCategories = await pool.query("SELECT * FROM Categories");
 
-        const mappedCategories = newCategories.recordset.map(cat => ({
+        const mappedCategories = newCategories.rows.map(cat => ({
             ...cat,
             image: getImageUrl(req, cat.image)
         }));
@@ -116,22 +113,18 @@ const updateCategory = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
+        await pool.query(
+            `UPDATE Categories
+            SET
+                name = $1,
+                image = $2
+            WHERE id = $3`,
+            [name, imagePath, id]
+        );
 
-        await pool.request()
-            .input("id", sql.Int, id)
-            .input("name", sql.NVarChar, name)
-            .input("image", sql.NVarChar, imagePath)
-            .query(`UPDATE Categories
-                SET
-                    name = @name,
-                    image = @image
-                WHERE id = @id`)
+        const newCategories = await pool.query("SELECT * FROM Categories");
 
-        const newCategories = await pool.request()
-            .query("SELECT * FROM Categories");
-
-        const mappedCategories = newCategories.recordset.map(cat => ({
+        const mappedCategories = newCategories.rows.map(cat => ({
             ...cat,
             image: getImageUrl(req, cat.image)
         }));

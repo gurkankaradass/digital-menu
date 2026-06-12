@@ -1,16 +1,15 @@
-const { sql, poolPromise } = require("../config/db");
+const pool = require("../config/db");
 const bcrypt = require("bcryptjs");
 
 const getAllEmployees = async (req, res) => {
     try {
-        const pool = await poolPromise;
-        const result = await pool.request().query("SELECT id, username, role FROM Employees");
+        const result = await pool.query("SELECT id, username, role FROM Employees");
 
-        if (result.recordset.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ message: "Personel Bulunamadı..." });
         }
 
-        res.json(result.recordset);
+        res.json(result.rows);
     } catch (error) {
         console.error("API Hatası: ", error);
         res.status(500).json({ message: "Sunucu Hatası" });
@@ -21,16 +20,16 @@ const login = async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const pool = await poolPromise;
-        const result = await pool.request()
-            .input("username", sql.NVarChar, username)
-            .query("SELECT * FROM Employees WHERE username = @username");
+        const result = await pool.query(
+            "SELECT * FROM Employees WHERE username = $1",
+            [username]
+        );
 
-        if (result.recordset.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ message: "Kullanıcı Adı Hatalı..." });
         }
 
-        const employee = result.recordset[0];
+        const employee = result.rows[0];
 
         let isMatch = false;
         if (employee.password.startsWith("$2a$") || employee.password.startsWith("$2b$") || employee.password.startsWith("$2y$")) {
@@ -66,30 +65,27 @@ const addNewEmployee = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
+        const checkEmployee = await pool.query(
+            "SELECT id FROM Employees WHERE username = $1",
+            [username]
+        );
 
-        const checkEmployee = await pool.request()
-            .input("username", sql.NVarChar, username)
-            .query("SELECT id FROM Employees WHERE username = @username");
-
-        if (checkEmployee.recordset.length > 0) {
+        if (checkEmployee.rows.length > 0) {
             return res.status(400).json({ message: "Personel Zaten Mevcut" });;
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await pool.request()
-            .input("username", sql.NVarChar, username)
-            .input("password", sql.NVarChar, hashedPassword)
-            .input("role", sql.NVarChar, role)
-            .query(`INSERT INTO Employees (username, password, role) VALUES (@username, @password, @role)`)
+        await pool.query(
+            `INSERT INTO Employees (username, password, role) VALUES ($1, $2, $3)`,
+            [username, hashedPassword, role]
+        );
 
-        const newEmployees = await pool.request()
-            .query("SELECT id, username, role FROM Employees");
+        const newEmployees = await pool.query("SELECT id, username, role FROM Employees");
 
         res.status(200).json({
             message: "Personel Eklendi...",
-            newEmployees: newEmployees.recordset
+            newEmployees: newEmployees.rows
         })
 
     } catch (error) {
@@ -102,26 +98,25 @@ const deleteEmployee = async (req, res) => {
     const { id } = req.params;
 
     try {
+        const checkEmployee = await pool.query(
+            "SELECT id FROM Employees WHERE id = $1",
+            [id]
+        );
 
-        const pool = await poolPromise;
-        const checkEmployee = await pool.request()
-            .input("id", sql.Int, id)
-            .query("SELECT id FROM Employees WHERE id = @id");
-
-        if (checkEmployee.recordset.length === 0) {
+        if (checkEmployee.rows.length === 0) {
             return res.status(404).json({ message: "Personel Bulunamadı..." });
         }
 
-        await pool.request()
-            .input("id", sql.Int, id)
-            .query("DELETE FROM Employees WHERE id = @id");
+        await pool.query(
+            "DELETE FROM Employees WHERE id = $1",
+            [id]
+        );
 
-        const newEmployees = await pool.request()
-            .query("SELECT * FROM Employees");
+        const newEmployees = await pool.query("SELECT * FROM Employees");
 
         res.status(200).json({
             message: "Personel Başarıyla Silindi...",
-            newEmployees: newEmployees.recordset
+            newEmployees: newEmployees.rows
         })
     } catch (error) {
         console.error("API Hatası: ", error);

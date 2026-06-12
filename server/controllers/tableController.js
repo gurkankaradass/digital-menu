@@ -1,15 +1,14 @@
-const { sql, poolPromise } = require("../config/db")
+const pool = require("../config/db");
 
 const getAllTables = async (req, res) => {
     try {
-        const pool = await poolPromise;
-        const result = await pool.request().query("SELECT * FROM Tables");
+        const result = await pool.query('SELECT * FROM "Tables"');
 
-        if (result.recordset.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ message: "Masa Bulunamadı..." });
         }
 
-        res.json(result.recordset);
+        res.json(result.rows);
     } catch (error) {
         console.error("API Hatası: ", error);
         res.status(500).json({ message: "Sunucu Hatası" });
@@ -24,26 +23,25 @@ const addNewTable = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
+        const checkTable = await pool.query(
+            'SELECT id FROM "Tables" WHERE table_number = $1',
+            [table_number]
+        );
 
-        const checkTable = await pool.request()
-            .input("table_number", sql.Int, table_number)
-            .query("SELECT id FROM Tables WHERE table_number = @table_number");
-
-        if (checkTable.recordset.length > 0) {
-            return res.status(400).json({ message: "Masa Zaten Mevcut" });;
+        if (checkTable.rows.length > 0) {
+            return res.status(400).json({ message: "Masa Zaten Mevcut" });
         }
 
-        await pool.request()
-            .input("table_number", sql.Int, table_number)
-            .query(`INSERT INTO Tables (table_number) VALUES (@table_number)`)
+        await pool.query(
+            'INSERT INTO "Tables" (table_number) VALUES ($1)',
+            [table_number]
+        );
 
-        const newTables = await pool.request()
-            .query("SELECT * FROM Tables");
+        const newTables = await pool.query('SELECT * FROM "Tables"');
 
         res.status(200).json({
             message: "Masa Eklendi...",
-            newTables: newTables.recordset
+            newTables: newTables.rows
         })
 
     } catch (error) {
@@ -56,26 +54,22 @@ const deleteTable = async (req, res) => {
     const { id } = req.params;
 
     try {
+        const checkTable = await pool.query(
+            'SELECT id FROM "Tables" WHERE id = $1',
+            [id]
+        );
 
-        const pool = await poolPromise;
-        const checkTable = await pool.request()
-            .input("id", sql.Int, id)
-            .query("SELECT id FROM Tables WHERE id = @id");
-
-        if (checkTable.length === 0) {
+        if (checkTable.rows.length === 0) {
             return res.status(404).json({ message: "Masa Bulunamadı..." });
         }
 
-        await pool.request()
-            .input("id", sql.Int, id)
-            .query("DELETE FROM Tables WHERE id = @id");
+        await pool.query('DELETE FROM "Tables" WHERE id = $1', [id]);
 
-        const newTables = await pool.request()
-            .query("SELECT * FROM Tables");
+        const newTables = await pool.query('SELECT * FROM "Tables"');
 
         res.status(200).json({
             message: "Masa Başarıyla Silindi...",
-            newTables: newTables.recordset
+            newTables: newTables.rows
         })
     } catch (error) {
         console.error("API Hatası: ", error);

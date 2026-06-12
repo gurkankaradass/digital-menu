@@ -1,4 +1,4 @@
-const { sql, poolPromise } = require("../config/db");
+const pool = require("../config/db");
 
 const getImageUrl = (req, path) => {
     if (!path) return path;
@@ -14,12 +14,12 @@ const getProductByCategoryName = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
-        const result = await pool.request()
-            .input('categoryName', sql.NVarChar, categoryName)
-            .query('SELECT p.id, p.name, p.image, p.price, c.name AS categoryName FROM Products p JOIN Categories c ON p.category_id = c.id WHERE c.name = @categoryName');
+        const result = await pool.query(
+            'SELECT p.id, p.name, p.image, p.price, c.name AS "categoryName" FROM "Products" p JOIN "Categories" c ON p.category_id = c.id WHERE c.name = $1',
+            [categoryName]
+        );
 
-        const products = result.recordset.map(product => ({
+        const products = result.rows.map(product => ({
             ...product,
             image: getImageUrl(req, product.image)
         }));
@@ -41,8 +41,6 @@ const addNewProduct = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
-
         let formattedPrice = price;
 
         if (formattedPrice % 1 === 0) {
@@ -51,36 +49,37 @@ const addNewProduct = async (req, res) => {
 
         formattedPrice = parseFloat(formattedPrice).toFixed(2);
 
-        const checkProduct = await pool.request()
-            .input("name", sql.NVarChar, name)
-            .query("SELECT id FROM Products WHERE name = @name");
+        const checkProduct = await pool.query(
+            'SELECT id FROM "Products" WHERE name = $1',
+            [name]
+        );
 
-        if (checkProduct.recordset.length > 0) {
-            return res.status(400).json({ message: "Ürün Zaten Mevcut" });;
+        if (checkProduct.rows.length > 0) {
+            return res.status(400).json({ message: "Ürün Zaten Mevcut" });
         }
 
-        const categoryResult = await pool.request()
-            .input("categoryName", sql.NVarChar, categoryName)
-            .query("SELECT id FROM Categories WHERE name = @categoryName");
+        const categoryResult = await pool.query(
+            'SELECT id FROM "Categories" WHERE name = $1',
+            [categoryName]
+        );
 
-        if (categoryResult.recordset.length === 0) {
+        if (categoryResult.rows.length === 0) {
             return res.status(400).json({ message: "Kategori bulunamadı" });
         }
 
-        const categoryId = categoryResult.recordset[0].id;
+        const categoryId = categoryResult.rows[0].id;
 
-        await pool.request()
-            .input("name", sql.NVarChar, name)
-            .input("categoryId", sql.Int, categoryId)
-            .input("image", sql.NVarChar, imagePath)
-            .input("price", sql.Decimal(10, 2), formattedPrice)
-            .query(`INSERT INTO Products (name, category_id, image, price) VALUES (@name, @categoryId, @image, @price)`)
+        await pool.query(
+            'INSERT INTO "Products" (name, category_id, image, price) VALUES ($1, $2, $3, $4)',
+            [name, categoryId, imagePath, formattedPrice]
+        );
 
-        const newProducts = await pool.request()
-            .input("categoryId", sql.Int, categoryId)
-            .query("SELECT * FROM Products WHERE category_id = @categoryId");
+        const newProducts = await pool.query(
+            'SELECT * FROM "Products" WHERE category_id = $1',
+            [categoryId]
+        );
 
-        const mappedProducts = newProducts.recordset.map(product => ({
+        const mappedProducts = newProducts.rows.map(product => ({
             ...product,
             image: getImageUrl(req, product.image)
         }));
@@ -100,18 +99,16 @@ const deleteProduct = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const pool = await poolPromise;
-        const checkProduct = await pool.request()
-            .input("id", sql.Int, id)
-            .query("SELECT id FROM Products WHERE id = @id");
+        const checkProduct = await pool.query(
+            'SELECT id FROM "Products" WHERE id = $1',
+            [id]
+        );
 
-        if (checkProduct.recordset.length === 0) {
+        if (checkProduct.rows.length === 0) {
             return res.status(404).json({ message: "Ürün Bulunamadı..." });
         }
 
-        await pool.request()
-            .input("id", sql.Int, id)
-            .query("DELETE FROM Products WHERE id = @id");
+        await pool.query('DELETE FROM "Products" WHERE id = $1', [id]);
 
         res.status(200).json({ message: "Ürün Başarıyla Silindi" });
     } catch (error) {
@@ -130,8 +127,6 @@ const updateProduct = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
-
         let formattedPrice = price;
 
         if (formattedPrice % 1 === 0) {
@@ -140,19 +135,16 @@ const updateProduct = async (req, res) => {
 
         formattedPrice = parseFloat(formattedPrice).toFixed(2);
 
-        await pool.request()
-            .input("id", sql.Int, id)
-            .input("name", sql.NVarChar, name)
-            .input("image", sql.NVarChar, imagePath)
-            .input("price", sql.Decimal(10, 2), formattedPrice)
-            .input("categoryName", sql.NVarChar, categoryName)
-            .query(`UPDATE Products 
+        await pool.query(
+            `UPDATE "Products" 
             SET 
-                name = @name,
-                image = @image,
-                price = @price,
-                category_id = (SELECT id FROM Categories WHERE name = @categoryName)
-            WHERE id = @id`)
+                name = $1,
+                image = $2,
+                price = $3,
+                category_id = (SELECT id FROM "Categories" WHERE name = $4)
+            WHERE id = $5`,
+            [name, imagePath, formattedPrice, categoryName, id]
+        );
 
         res.status(201).json({ message: "Ürün Güncellendi..." });
     } catch (error) {

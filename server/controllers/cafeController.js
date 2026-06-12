@@ -1,4 +1,4 @@
-const { sql, poolPromise } = require("../config/db");
+const pool = require("../config/db");
 
 const getImageUrl = (req, path) => {
     if (!path) return path;
@@ -8,14 +8,13 @@ const getImageUrl = (req, path) => {
 
 const getCafeInfo = async (req, res) => {
     try {
-        const pool = await poolPromise;
-        const result = await pool.request().query('SELECT * FROM Cafe_Info WHERE id = 1');
+        const result = await pool.query('SELECT * FROM Cafe_Info WHERE id = 1');
 
-        if (result.recordset.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ message: "Cafe Bilgilerine Ulaşılamadı..." });
         }
 
-        const cafe = result.recordset[0];
+        const cafe = result.rows[0];
         cafe.logo = getImageUrl(req, cafe.logo);
 
         res.json(cafe);
@@ -36,34 +35,27 @@ const updateCafeInfo = async (req, res) => {
     }
 
     try {
-        const pool = await poolPromise;
-
-        await pool.request()
-            .input("id", sql.Int, id)
-            .input("name", sql.NVarChar, name)
-            .input("logo", sql.NVarChar, logoPath)
-            .input("phone", sql.NVarChar, phone)
-            .input("location", sql.NVarChar, location)
-            .input("address", sql.NVarChar, address)
-            .input("map", sql.NVarChar, map)
-            .input("instagram", sql.NVarChar, instagram)
-            .query(`UPDATE Cafe_Info 
+        await pool.query(
+            `UPDATE Cafe_Info 
             SET 
-                name = @name,
-                logo = @logo,
-                phone = @phone,
-                location = @location,
-                address = @address,
-                map = @map,
-                instagram = @instagram
-            WHERE id = @id`)
+                name = $1,
+                logo = $2,
+                phone = $3,
+                location = $4,
+                address = $5,
+                map = $6,
+                instagram = $7
+            WHERE id = $8`,
+            [name, logoPath, phone, location, address, map, instagram, id]
+        );
 
         // Güncellenen bilgileri veritabanından al
-        const updatedCafeInfo = await pool.request()
-            .input("id", sql.Int, id)
-            .query(`SELECT * FROM Cafe_Info WHERE id = @id`);
+        const updatedCafeInfo = await pool.query(
+            `SELECT * FROM Cafe_Info WHERE id = $1`,
+            [id]
+        );
 
-        const cafe = updatedCafeInfo.recordset[0];
+        const cafe = updatedCafeInfo.rows[0];
         cafe.logo = getImageUrl(req, cafe.logo);
 
         // Güncellenen veriyi döndür
